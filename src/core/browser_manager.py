@@ -14,7 +14,7 @@ from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.common.exceptions import WebDriverException, TimeoutException, InvalidArgumentException
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
-from webdriver_manager.core.utils import WDM_SSL_VERIFY # To potentially configure SSL verification
+# from webdriver_manager.core.utils import WDM_SSL_VERIFY # To potentially configure SSL verification
 from fake_headers import Headers
 
 # Adjust import path for ConfigLoader and setup_logger

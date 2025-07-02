@@ -1,0 +1,36 @@
+// .devcontainer/devcontainer.json
+{
+    "name": "Python Project with Selenium (Alpine)",
+
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "charliermarsh.ruff",
+                "EditorConfig.EditorConfig",
+                "donjayamanne.python-extension-pack"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "python.testing.pytestEnabled": true,
+                "python.analysis.autoImportCompletions": true,
+                "editor.formatOnSave": true,
+                "editor.codeActionsOnSave": {
+                    "source.organizeImports": "explicit"
+                }
+            }
+        }
+    },
+
+    "postCreateCommand": "pip install --no-cache-dir -r requirements.txt",
+
+    "runArgs": ["--shm-size=256m"],
+
+    "remoteUser": "vscode"
+}
