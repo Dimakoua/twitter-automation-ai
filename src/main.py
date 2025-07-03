@@ -544,7 +544,6 @@ class TwitterOrchestrator:
         for account_dict in self.accounts_data:
             tasks.append(self._process_account(account_dict))
 
-        logger.info(account_dict)
         logger.info(f"Starting concurrent processing for {len(tasks)} accounts.")
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
