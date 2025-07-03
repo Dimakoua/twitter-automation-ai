@@ -549,8 +549,6 @@ class TwitterOrchestrator:
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
         for i, result in enumerate(results):
-            print("-=-=-=-=-=-=-=-=-=-")
-            print(self.accounts_data)
             account_id = self.accounts_data[i].get("account_id", f"AccountIndex_{i}")
             if isinstance(result, Exception):
                 logger.error(

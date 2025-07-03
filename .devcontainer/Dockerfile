@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     libxss1 \
     libappindicator3-1 \
     fonts-liberation \
+    firefox-esr \
     xdg-utils \
     libatk-bridge2.0-0 \
     libgtk-3-0 \

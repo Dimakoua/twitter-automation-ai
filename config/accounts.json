@@ -1,53 +1,55 @@
-{
-    "account_id": "meme_coin_tracker_001",
-    "is_active": true,
-    "cookie_file_path": "config/meme_coin_tracker_001_cookies.json",
-    "target_keywords_override": [
-        "meme coin",
-        "altcoin pump",
-        "shitcoin",
-        "crypto signal",
-        "DOGE",
-        "PEPE",
-        "low cap gem",
-        "100x crypto",
-        "crypto alpha",
-        "crypto trend"
-    ],
-    "competitor_profiles_override": [
-        "https://x.com/cryptodailyuk",
-        "https://x.com/CryptoWhale",
-        "https://x.com/whale_alert",
-        "https://x.com/degenspartan",
-        "https://x.com/0xfoobar"
-    ],
-    "news_sites_override": [
-        "https://cointelegraph.com/",
-        "https://decrypt.co/",
-        "https://www.coindesk.com/"
-    ],
-    "research_paper_sites_override": [
-        "https://arxiv.org/list/q-fin.GN/recent"
-    ],
-    "llm_settings_override": {
-        "service_preference": "gemini",
-        "model_name_override": "gemini-1.5-flash-latest",
-        "max_tokens": 120,
-        "temperature": 0.7
-    },
-    "action_config_override": {
-        "min_delay_between_actions_seconds": 45,
-        "max_delay_between_actions_seconds": 180,
-        "enable_competitor_reposts": true,
-        "max_posts_per_competitor_run": 3,
-        "min_likes_for_repost_candidate": 10,
-        "min_retweets_for_repost_candidate": 3,
-        "enable_thread_analysis": true,
-        "llm_settings_for_post": {
+[
+    {
+        "account_id": "meme_coin_tracker_001",
+        "is_active": true,
+        "cookie_file_path": "config/meme_coin_tracker_001_cookies.json",
+        "target_keywords_override": [
+            "meme coin",
+            "altcoin pump",
+            "shitcoin",
+            "crypto signal",
+            "DOGE",
+            "PEPE",
+            "low cap gem",
+            "100x crypto",
+            "crypto alpha",
+            "crypto trend"
+        ],
+        "competitor_profiles_override": [
+            "https://x.com/cryptodailyuk",
+            "https://x.com/CryptoWhale",
+            "https://x.com/whale_alert",
+            "https://x.com/degenspartan",
+            "https://x.com/0xfoobar"
+        ],
+        "news_sites_override": [
+            "https://cointelegraph.com/",
+            "https://decrypt.co/",
+            "https://www.coindesk.com/"
+        ],
+        "research_paper_sites_override": [
+            "https://arxiv.org/list/q-fin.GN/recent"
+        ],
+        "llm_settings_override": {
             "service_preference": "gemini",
             "model_name_override": "gemini-1.5-flash-latest",
             "max_tokens": 120,
-            "temperature": 0.65
+            "temperature": 0.7
+        },
+        "action_config_override": {
+            "min_delay_between_actions_seconds": 45,
+            "max_delay_between_actions_seconds": 180,
+            "enable_competitor_reposts": true,
+            "max_posts_per_competitor_run": 3,
+            "min_likes_for_repost_candidate": 10,
+            "min_retweets_for_repost_candidate": 3,
+            "enable_thread_analysis": true,
+            "llm_settings_for_post": {
+                "service_preference": "gemini",
+                "model_name_override": "gemini-1.5-flash-latest",
+                "max_tokens": 120,
+                "temperature": 0.65
+            }
         }
     }
-}
+]
