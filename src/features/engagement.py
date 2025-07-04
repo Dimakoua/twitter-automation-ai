@@ -32,6 +32,16 @@ class TweetEngagement:
         self.account_config = account_config
         self.config_loader = browser_manager.config_loader
 
+    def _force_click(self, element: WebElement):
+        """Attempts a standard click, falls back to a JavaScript click if intercepted."""
+        try:
+            element.click()
+        except ElementClickInterceptedException:
+            logger.warning(
+                f"Click intercepted for element: {element.tag_name}. Forcing click with JavaScript."
+            )
+            self.driver.execute_script("arguments[0].click();", element)
+
     def _find_tweet_on_page(self, tweet_id: str) -> Optional[WebElement]:
         """
         Attempts to find a tweet article element by its ID within its URL.
@@ -102,8 +112,7 @@ class TweetEngagement:
             # if like_button.get_attribute("data-testid") == "unlike":
             #    logger.info(f"Tweet {tweet_id} is already liked (data-testid indicates unlike).")
             #    return True
-
-            like_button.click()
+            self._force_click(like_button)
             logger.info(f"Clicked like button for tweet {tweet_id}.")
             
             # Optionally, wait for a visual confirmation (e.g., button state change)

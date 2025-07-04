@@ -15,9 +15,8 @@
             "crypto alpha",
             "crypto trend"
         ],
-        "competitor_profiles_override": [
+        "competitor_profiles": [
             "https://x.com/cryptodailyuk",
-            "https://x.com/CryptoWhale",
             "https://x.com/whale_alert",
             "https://x.com/degenspartan",
             "https://x.com/0xfoobar"
@@ -50,6 +49,11 @@
                 "max_tokens": 120,
                 "temperature": 0.65
             }
+        },
+        "cookies": {
+            "name": "auth_token",
+            "path": "/",
+            "value": ""
         }
     }
 ]

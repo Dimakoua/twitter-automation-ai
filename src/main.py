@@ -74,6 +74,7 @@ class TwitterOrchestrator:
             browser_manager = BrowserManager(
                 account_config=account_dict
             )  # Pass original dict for cookie path handling
+            logger.debug(f"Loaded settings: {self.config_loader.get_settings()}")
             llm_service = LLMService(config_loader=self.config_loader)
 
             # Initialize feature modules with the current account's context
@@ -205,7 +206,9 @@ class TwitterOrchestrator:
                             prompt = f"Rewrite this tweet in an engaging way: '{scraped_tweet.text_content}' by {scraped_tweet.user_handle or 'a user'}."
                             if scraped_tweet.is_confirmed_thread:
                                 prompt = f"This tweet is part of a thread. Rewrite its essence engagingly: '{scraped_tweet.text_content}' by {scraped_tweet.user_handle or 'a user'}."
-                            new_tweet_content = TweetContent(text=prompt)
+                            new_tweet_content = TweetContent(
+                                text=scraped_tweet.text_content
+                            )
                             logger.info(
                                 f"[{account.account_id}] Generating and posting new tweet based on {scraped_tweet.tweet_id}"
                             )

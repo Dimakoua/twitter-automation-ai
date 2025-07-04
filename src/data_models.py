@@ -1,4 +1,4 @@
-from pydantic import BaseModel, HttpUrl, Field
+from pydantic import BaseModel, HttpUrl, Field, model_validator, field_validator
 from typing import List, Optional, Dict, Any, Literal
 from datetime import datetime
 
@@ -7,10 +7,24 @@ class AccountCookie(BaseModel):
     value: str
     domain: Optional[str] = None
     path: Optional[str] = '/'
-    expires: Optional[float] = None # Timestamp
+    expires: Optional[float] = Field(None, alias='expirationDate', description="Timestamp from cookie exporters")
     httpOnly: Optional[bool] = False
     secure: Optional[bool] = False
     sameSite: Optional[Literal["Strict", "Lax", "None"]] = None
+
+    @field_validator('sameSite', mode='before')
+    @classmethod
+    def adapt_samesite(cls, v: Any) -> Optional[str]:
+        """Adapts common 'sameSite' values from browser extensions to the model's expected Literal."""
+        if isinstance(v, str):
+            v_lower = v.lower()
+            if v_lower == 'no_restriction':
+                return 'None'
+            # Capitalize to match Literal, e.g., 'lax' -> 'Lax'
+            capitalized_v = v_lower.capitalize()
+            if capitalized_v in ('Strict', 'Lax', 'None'):
+                return capitalized_v
+        return v # Let Pydantic handle other cases or non-string values
 
 class LLMSettings(BaseModel):
     service_preference: Optional[str] = Field(None, description="Preferred LLM service for this context: 'gemini', 'openai', 'azure'")
@@ -86,6 +100,16 @@ class AccountConfig(BaseModel):
     # Account-specific action configurations (can include action-specific LLM settings)
     action_config: Optional[ActionConfig] = Field(None, description="Specific action configurations for this account. Overrides global action_config.")
 
+    @model_validator(mode='before')
+    @classmethod
+    def _handle_single_cookie_object(cls, data: Any) -> Any:
+        """Allows 'cookies' to be a single dictionary object, wrapping it in a list for robustness."""
+        if isinstance(data, dict):
+            cookies_val = data.get('cookies')
+            if isinstance(cookies_val, dict):
+                # If 'cookies' is a single dict, wrap it in a list for validation
+                data['cookies'] = [cookies_val]
+        return data
 
 class TweetContent(BaseModel):
     text: str # Can be actual text or a prompt for LLM generation
