@@ -1,50 +1,18 @@
 import logging
-import os
-import sys
 from typing import Any, Dict, List, Optional
 
-from dotenv import load_dotenv
+from langchain_google_genai import ChatGoogleGenerativeAI
+from openai import AsyncAzureOpenAI, AsyncOpenAI  # Use async versions
+from pydantic import SecretStr
 
-load_dotenv()  # This loads the environment variables from .env
+from .config_loader import ConfigLoader
+
 # Initialize logger - Assumes setup_logger has been called by the application entry point.
 # If running this module directly for tests, basicConfig might be needed in __main__.
 logger = logging.getLogger(__name__)
 
-# Adjust import path for ConfigLoader
-try:
-    from .config_loader import ConfigLoader
-except ImportError:
-    # This block allows the script to be run directly for testing,
-    # assuming the script is in src/core and the root is two levels up.
-    from pathlib import Path
-
-    sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
-    from src.core.config_loader import ConfigLoader
-
-
-# Attempt to import LLM SDKs
-try:
-    from langchain_google_genai import ChatGoogleGenerativeAI
-    from pydantic import SecretStr  # Used by langchain_google_genai for API keys
-
-    logger.debug("Gemini SDK (langchain-google-genai or pydantic) available.")
-    GEMINI_AVAILABLE = True
-except ImportError:
-    logger.debug("Gemini SDK (langchain-google-genai or pydantic) NOT available.")
-    GEMINI_AVAILABLE = False
-    ChatGoogleGenerativeAI = None  # Define for type hinting if not available
-    SecretStr = None
-
-
-try:
-    from openai import AsyncAzureOpenAI, AsyncOpenAI  # Use async versions
-
-    OPENAI_AVAILABLE = True
-except ImportError:
-    OPENAI_AVAILABLE = False
-    AsyncOpenAI = None  # Define for type hinting
-    AsyncAzureOpenAI = None
-
+GEMINI_AVAILABLE = True
+OPENAI_AVAILABLE = True
 
 # Standard API key placeholders to check against
 API_KEY_PLACEHOLDERS = {
@@ -95,32 +63,18 @@ class LLMService:
             logger.debug("Checking Gemini configuration...")
             gemini_config = self.llm_settings.get("gemini", {})
             gemini_api_key = self.api_keys.get("gemini_api_key")
+            logger.debug(f"Gemini API key: {gemini_api_key}")
 
-            if not gemini_api_key:
-                gemini_api_key = os.environ.get("GEMINI_API_KEY", "EMPTY")
-
-            if self._is_api_key_valid("gemini_api_key", gemini_api_key):
-                try:
-                    model_name = gemini_config.get(
-                        "model", "gemini-pro"
-                    )  # Default model
-                    self.gemini_client = ChatGoogleGenerativeAI(
-                        model=model_name,
-                        api_key=SecretStr(gemini_api_key)
-                        if SecretStr
-                        else gemini_api_key,
-                        temperature=gemini_config.get("temperature", 0.7),
-                        # Add other relevant parameters from gemini_config
-                    )
-                    logger.info(f"Gemini client initialized with model '{model_name}'.")
-                except Exception as e:
-                    logger.error(
-                        f"Failed to initialize Gemini client: {e}", exc_info=True
-                    )
-            else:
-                logger.info(
-                    "Gemini API key not configured or is a placeholder. Gemini client not initialized."
+            try:
+                model_name = gemini_config.get("model", "gemini-pro")  # Default model
+                self.gemini_client = ChatGoogleGenerativeAI(
+                    model=model_name,
+                    api_key=SecretStr(gemini_api_key),
+                    temperature=gemini_config.get("temperature", 0.7),
                 )
+                logger.info(f"Gemini client initialized with model '{model_name}'.")
+            except Exception as e:
+                logger.error(f"Failed to initialize Gemini client: {e}", exc_info=True)
         else:
             logger.info(
                 "Gemini SDK (langchain-google-genai or pydantic) not available. Gemini client cannot be initialized."
@@ -128,20 +82,14 @@ class LLMService:
 
         # Initialize OpenAI client (Async)
         if OPENAI_AVAILABLE:
-            openai_config = self.llm_settings.get("openai", {})
             openai_api_key = self.api_keys.get("openai_api_key")
 
-            if self._is_api_key_valid("openai_api_key", openai_api_key):
-                try:
-                    self.openai_client = AsyncOpenAI(api_key=openai_api_key)
-                    logger.info("AsyncOpenAI client initialized.")
-                except Exception as e:
-                    logger.error(
-                        f"Failed to initialize AsyncOpenAI client: {e}", exc_info=True
-                    )
-            else:
-                logger.info(
-                    "OpenAI API key not configured or is a placeholder. OpenAI client not initialized."
+            try:
+                self.openai_client = AsyncOpenAI(api_key=openai_api_key)
+                logger.info("AsyncOpenAI client initialized.")
+            except Exception as e:
+                logger.error(
+                    f"Failed to initialize AsyncOpenAI client: {e}", exc_info=True
                 )
         else:
             logger.info(
@@ -320,113 +268,3 @@ class LLMService:
             "All configured LLM services failed or none are available/configured to generate text."
         )
         return None
-
-
-# Example Usage (Async context needed for ainvoke)
-async def main_test():
-    # Setup basic logging for direct script execution
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    )
-
-    # This assumes 'config/settings.json' is set up with at least one API key and llm_settings.
-    # Example settings.json structure for this test:
-    # {
-    #   "api_keys": {
-    #     "gemini_api_key": "YOUR_GEMINI_KEY",
-    #     "openai_api_key": "YOUR_OPENAI_KEY",
-    #     "azure_openai_api_key": "YOUR_AZURE_KEY",
-    #     "azure_openai_endpoint": "YOUR_AZURE_ENDPOINT",
-    #     "azure_openai_deployment": "YOUR_AZURE_DEPLOYMENT_ID_FOR_API_KEYS_FALLBACK"
-    #   },
-    #   "llm_settings": {
-    #     "service_preference_order": ["azure", "openai", "gemini"],
-    #     "default_max_tokens": 200,
-    #     "gemini": {
-    #       "model": "gemini-1.5-flash-latest",
-    #       "default_params": { "temperature": 0.8 }
-    #     },
-    #     "openai": {
-    #       "model": "gpt-4o",
-    #       "default_params": { "temperature": 0.7 }
-    #     },
-    #     "azure": {
-    #       "deployment_name": "YOUR_AZURE_DEPLOYMENT_ID_PRIMARY",
-    #       "api_version": "2024-05-01-preview",
-    #       "default_params": { "temperature": 0.75, "max_tokens": 300 }
-    #     }
-    #   },
-    #   "logging": {"level": "DEBUG"}
-    # }
-    # Ensure placeholders like "YOUR_GEMINI_KEY" are replaced with actual keys or valid non-placeholder strings.
-
-    loader = ConfigLoader()  # ConfigLoader will log if files are missing/empty
-    if not loader.get_settings():  # Check if settings were loaded
-        logger.error(
-            "settings.json not found or empty. LLMService test cannot proceed effectively."
-        )
-        logger.error(
-            f"Please create/check config/settings.json. Current path: {loader.settings_file.resolve()}"
-        )
-        return
-    logger.debug(f"Loaded settings: {loader.get_settings()}")
-    llm_service = LLMService(config_loader=loader)
-    test_prompt = (
-        "Write a short, engaging tweet about the future of AI in three sentences."
-    )
-
-    # Test with a preferred service (e.g., Gemini)
-    logger.info("\n--- Testing with Gemini preference ---")
-    response_gemini = await llm_service.generate_text(
-        test_prompt, service_preference="gemini", temperature=0.9
-    )
-    if response_gemini:
-        logger.info(f"Gemini Response: {response_gemini}")
-    else:
-        logger.warning(
-            "Failed to get response from Gemini or Gemini not configured/available."
-        )
-
-    # Test with Azure preference, overriding max_tokens
-    logger.info("\n--- Testing with Azure OpenAI preference (custom max_tokens) ---")
-    response_azure = await llm_service.generate_text(
-        test_prompt, service_preference="azure", max_tokens=50
-    )
-    if response_azure:
-        logger.info(f"Azure OpenAI Response: {response_azure}")
-    else:
-        logger.warning(
-            "Failed to get response from Azure or Azure not configured/available."
-        )
-
-    # Test with OpenAI preference, using default model from config
-    logger.info("\n--- Testing with OpenAI preference ---")
-    response_openai = await llm_service.generate_text(
-        test_prompt, service_preference="openai"
-    )
-    if response_openai:
-        logger.info(f"OpenAI Response: {response_openai}")
-    else:
-        logger.warning(
-            "Failed to get response from OpenAI or OpenAI not configured/available."
-        )
-
-    # Test with no preference (will try based on configured order)
-    logger.info(
-        "\n--- Testing with no preference (uses configured service_preference_order) ---"
-    )
-    response_default = await llm_service.generate_text(test_prompt)
-    if response_default:
-        logger.info(f"Default Service Order Response: {response_default}")
-    else:
-        logger.warning("Failed to get response from any service using default order.")
-
-
-if __name__ == "__main__":
-    import asyncio
-
-    # To run this test, ensure you have valid API keys and llm_settings in your config/settings.json
-    # and the necessary SDKs installed (e.g., pip install langchain-google-genai openai pydantic)
-    # Then run: python -m src.core.llm_service (from the project root directory)
-    asyncio.run(main_test())

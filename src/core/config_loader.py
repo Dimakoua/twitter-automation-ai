@@ -1,8 +1,12 @@
 import json
 import logging
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
+from dotenv import load_dotenv
+
+load_dotenv()
 # Define project root relative to this file's location (src/core/config_loader.py)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 CONFIG_DIR = PROJECT_ROOT / "config"
@@ -120,7 +124,25 @@ class ConfigLoader:
 
     def get_api_key(self, service_name: str) -> Optional[str]:
         """Retrieves an API key for a specific service."""
-        return self.get_setting(f"api_keys.{service_name}")
+        env_var_name = service_name.upper()
+        api_key = self.get_setting(f"api_keys.{service_name}")
+        is_placeholder = self._is_placeholder(api_key)
+
+        if is_placeholder and os.environ.get(env_var_name):
+            api_key = os.environ.get(env_var_name)
+        else:
+            logger.warning(
+                f"API key for '{service_name}' is a placeholder in settings and the environment variable '{env_var_name}' is not set."
+            )
+
+        return api_key
+
+    def _is_placeholder(self, key_value: Optional[str]) -> bool:
+        if not key_value:
+            return False
+        if "YOUR_" in key_value.upper() and "_KEY" in key_value.upper():
+            return True
+        return False
 
     def get_twitter_automation_setting(
         self, setting_name: str, default: Any = None

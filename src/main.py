@@ -53,9 +53,7 @@ class TwitterOrchestrator:
             #     if 'cookies' in account_config_data: del account_config_data['cookies'] # Avoid conflict if model expects List[AccountCookie]
 
             # Use Pydantic's parse_obj method for robust parsing from dict
-            account = AccountConfig.model_validate(
-                account_dict
-            )  # Replaced AccountConfig(**account_dict) for better validation
+            account = AccountConfig.model_validate(account_dict)
 
         except Exception as e:  # Catch Pydantic ValidationError specifically if needed
             logger.error(
@@ -71,20 +69,14 @@ class TwitterOrchestrator:
 
         browser_manager = None
         try:
-            browser_manager = BrowserManager(
-                account_config=account_dict
-            )  # Pass original dict for cookie path handling
+            browser_manager = BrowserManager(account_config=account_dict)
             logger.debug(f"Loaded settings: {self.config_loader.get_settings()}")
             llm_service = LLMService(config_loader=self.config_loader)
 
             # Initialize feature modules with the current account's context
             scraper = TweetScraper(browser_manager, account_id=account.account_id)
-            publisher = TweetPublisher(
-                browser_manager, llm_service, account
-            )  # Publisher needs AccountConfig model
-            engagement = TweetEngagement(
-                browser_manager, account
-            )  # Engagement needs AccountConfig model
+            publisher = TweetPublisher(browser_manager, llm_service, account)
+            engagement = TweetEngagement(browser_manager, account)
 
             # --- Define actions based on global and account-specific settings ---
             automation_settings = self.global_settings.get(
@@ -203,12 +195,19 @@ class TwitterOrchestrator:
                         interaction_success = False
 
                         if interaction_type == "repost":
-                            prompt = f"Rewrite this tweet in an engaging way: '{scraped_tweet.text_content}' by {scraped_tweet.user_handle or 'a user'}."
+                            prompt = f"Rewrite this tweet in an engaging way: '{scraped_tweet.text_content}' by {scraped_tweet.user_handle or 'a user. Provide only one-two clean sentence. This is used by bot. Text must be ready to post on Twitter.'}."
                             if scraped_tweet.is_confirmed_thread:
-                                prompt = f"This tweet is part of a thread. Rewrite its essence engagingly: '{scraped_tweet.text_content}' by {scraped_tweet.user_handle or 'a user'}."
-                            new_tweet_content = TweetContent(
-                                text=scraped_tweet.text_content
+                                prompt = f"This tweet is part of a thread. Rewrite its essence engagingly: '{scraped_tweet.text_content}' by {scraped_tweet.user_handle or 'a user. Provide only one-two clean sentence. This is used by bot. Text must be ready to post on Twitter.'}."
+
+                            generated_text = await llm_service.generate_text(
+                                prompt=prompt,
+                                service_preference=llm_for_reply.service_preference,
+                                model_name=llm_for_reply.model_name_override,
+                                max_tokens=llm_for_reply.max_tokens,
+                                temperature=llm_for_reply.temperature,
                             )
+
+                            new_tweet_content = TweetContent(text=generated_text)
                             logger.info(
                                 f"[{account.account_id}] Generating and posting new tweet based on {scraped_tweet.tweet_id}"
                             )
@@ -225,7 +224,10 @@ class TwitterOrchestrator:
                             )
 
                         elif interaction_type == "quote_tweet":
-                            quote_prompt_template = current_action_config.prompt_for_quote_tweet_from_competitor
+                            quote_prompt_templates = current_action_config.prompt_for_quote_tweet_from_competitor
+                            quote_prompt_template = random.choice(
+                                quote_prompt_templates
+                            )
                             quote_prompt = quote_prompt_template.format(
                                 user_handle=(scraped_tweet.user_handle or "a user"),
                                 tweet_text=scraped_tweet.text_content,

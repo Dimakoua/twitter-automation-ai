@@ -302,7 +302,7 @@ class TweetScraper:
             f"Navigating to {url} for scraping ({search_type}). Max tweets: {max_tweets}"
         )
         self.browser_manager.navigate_to(url)
-        time.sleep(5)  # Wait for initial page load, adjust as needed
+        time.sleep(5)
 
         scraped_tweets: List[ScrapedTweet] = []
         seen_tweet_ids = set()

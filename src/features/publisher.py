@@ -479,7 +479,7 @@ class TweetPublisher:
 
             if is_quote_tweet:
                 # Click "Quote" option in the menu
-                quote_option_xpath = '//a[@data-testid="tweet opción Quote"]'  # This selector is an example, needs verification
+                quote_option_xpath = '//a[@role="menuitem" and .//span[text()="Quote"]]'  # This selector is an example, needs verification
                 # A more reliable way might be to find menu item by role and text "Quote" or "Quote Tweet"
                 # Example: //div[@role="menuitem"]//span[text()="Quote"] or similar
                 # For now, using a placeholder data-testid which is unlikely to be correct.
@@ -489,7 +489,7 @@ class TweetPublisher:
                         EC.element_to_be_clickable(
                             (
                                 By.XPATH,
-                                '//div[@role="menuitem" and contains(., "Quote")]',
+                                quote_option_xpath,
                             )
                         )
                     )
@@ -516,7 +516,7 @@ class TweetPublisher:
                 )
                 quote_text_area.clear()
                 quote_text_area.send_keys(final_quote_text)
-                logger.info("Typed quote text.")
+                logger.info(f"Typed quote text. {final_quote_text}")
 
                 # Click "Post" button for the quote tweet
                 post_button_xpath = '//button[@data-testid="tweetButton"]'  # Usually the same for all posts

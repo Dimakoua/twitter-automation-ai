@@ -2,32 +2,22 @@
     {
         "account_id": "meme_coin_tracker_001",
         "is_active": true,
-        "cookie_file_path": "config/meme_coin_tracker_001_cookies.json",
+        "cookie_env_name": "TRACKER_001_COOKIE",
         "target_keywords_override": [
+            "MEMECOIN UPDATES",
             "meme coin",
             "altcoin pump",
             "shitcoin",
             "crypto signal",
-            "DOGE",
-            "PEPE",
             "low cap gem",
             "100x crypto",
             "crypto alpha",
             "crypto trend"
         ],
         "competitor_profiles": [
-            "https://x.com/cryptodailyuk",
-            "https://x.com/whale_alert",
-            "https://x.com/degenspartan",
-            "https://x.com/0xfoobar"
-        ],
-        "news_sites_override": [
-            "https://cointelegraph.com/",
-            "https://decrypt.co/",
-            "https://www.coindesk.com/"
-        ],
-        "research_paper_sites_override": [
-            "https://arxiv.org/list/q-fin.GN/recent"
+            "https://x.com/fourtislisting",
+            "https://x.com/Gempump_io",
+            "https://x.com/alphaanalysisog"
         ],
         "llm_settings_override": {
             "service_preference": "gemini",
@@ -49,11 +39,6 @@
                 "max_tokens": 120,
                 "temperature": 0.65
             }
-        },
-        "cookies": {
-            "name": "auth_token",
-            "path": "/",
-            "value": ""
         }
     }
 ]
