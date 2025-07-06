@@ -3,7 +3,7 @@
         "account_id": "meme_coin_tracker_001",
         "is_active": true,
         "cookie_env_name": "TRACKER_001_COOKIE",
-        "target_keywords_override": [
+        "target_keywords": [
             "MEMECOIN UPDATES",
             "meme coin",
             "altcoin pump",

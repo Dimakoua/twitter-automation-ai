@@ -353,13 +353,27 @@ class TwitterOrchestrator:
                             )
 
                         # Generate reply text
-                        reply_prompt_context = (
-                            "This tweet is part of a thread."
-                            if scraped_tweet_to_reply.is_confirmed_thread
-                            else "This is a standalone tweet."
-                        )
-                        reply_prompt = f'Generate an insightful and engaging reply to the following tweet. {reply_prompt_context}\n\nOriginal tweet by @{scraped_tweet_to_reply.user_handle or "user"}:\n"{scraped_tweet_to_reply.text_content}"\n\nYour reply:'
+                        # NOTE I dont care about this for now
+                        # reply_prompt_context = (
+                        #     "This tweet is part of a thread."
+                        #     if scraped_tweet_to_reply.is_confirmed_thread
+                        #     else "This is a standalone tweet."
+                        # )
 
+                        reply_prompt = f"""
+                            Generate a concise, insightful, and engaging reply to the tweet below.
+
+                            Original tweet by @{scraped_tweet_to_reply.user_handle or "user"}:  
+                            "{scraped_tweet_to_reply.text_content}"
+
+                            Instructions:
+                            - Reply only if the tweet is about crypto, memecoins, or altcoins. Otherwise, return: FALSE  
+                            - Respond naturally and intelligently.  
+                            - Keep it short, clean, and ready to post.  
+                            - If relevant, organically promote this bot: https://t.me/to_the_meme_bot (signals for memecoins)
+
+                            Your reply:
+                        """
                         logger.info(
                             f"[{account.account_id}] Generating reply for tweet {scraped_tweet_to_reply.tweet_id}..."
                         )

@@ -62,7 +62,7 @@ class LLMService:
         if GEMINI_AVAILABLE:
             logger.debug("Checking Gemini configuration...")
             gemini_config = self.llm_settings.get("gemini", {})
-            gemini_api_key = self.api_keys.get("gemini_api_key")
+            gemini_api_key = self.config_loader.get_api_key("gemini_api_key")
             logger.debug(f"Gemini API key: {gemini_api_key}")
 
             try:
