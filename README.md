@@ -7,6 +7,8 @@
 [![Stars](https://img.shields.io/github/stars/ihuzaifashoukat/twitter-automation-ai)](https://github.com/ihuzaifashoukat/twitter-automation-ai/stargazers)
 [![Contributors](https://img.shields.io/github/contributors/ihuzaifashoukat/twitter-automation-ai)](https://github.com/ihuzaifashoukat/twitter-automation-ai/graphs/contributors)
 
+> **Note:** This repository is a fork of the original [Advanced Twitter Automation AI](https://github.com/ihuzaifashoukat/twitter-automation-ai) project. It has been modified and tailored to suit specific personal requirements and may differ from the original version.
+
 **Advanced Twitter Automation AI** is a modular Python-based framework designed for automating a wide range of Twitter (now X.com) interactions. It supports multiple accounts and leverages Selenium for robust browser automation, with optional integration of Large Language Models (LLMs) like OpenAI's GPT and Google's Gemini for intelligent content generation, analysis, and engagement.
 
 ## Table of Contents
@@ -52,6 +54,7 @@
     *   Analyze competitor activity and engage strategically.
 *   **Configurable Automation:**
     *   Fine-grained control over automation parameters via JSON configuration files.
+    *   **Queue-Based Publishing:** Publish tweets from external systems by dropping simple JSON messages into a file-based queue. Ideal for decoupled architectures.
     *   Per-account overrides for keywords, target profiles, LLM settings, and action behaviors.
 *   **Browser Automation:** Uses Selenium for interacting with Twitter, handling dynamic content and complex UI elements.
 *   **Modular Design:** Easily extendable with new features and functionalities.
@@ -92,6 +95,7 @@ twitter-automation-ai/
 │   │   └── scroller.py
 │   ├── data_models.py      # Pydantic models for data structures
 │   ├── main.py             # Main orchestrator script
+│   ├── publish_queue_messages.py # Script to publish tweets from a file queue
 │   └── __init__.py
 ├── .env                    # Environment variables (optional, for API keys)
 ├── requirements.txt        # Python dependencies
@@ -147,7 +151,10 @@ This file manages individual Twitter account configurations. It should be an arr
     *   `is_active`: Boolean, set to `true` to enable automation for this account.
     *   `cookie_file_path`: Path to a JSON file containing cookies for the account (e.g., `config/my_account_cookies.json`).
     *   `cookies`: Alternatively, an array of cookie objects can be provided directly.
-    *   **Overrides:** You can specify per-account overrides for various settings like `target_keywords_override`, `competitor_profiles_override`, `llm_settings_override`, and `action_config_override`. If an override is not present, the global defaults from `config/settings.json` will be used.
+    *   `target_keywords`: A list of keywords for this account to track for replies.
+    *   `competitor_profiles`: A list of competitor profile URLs to scrape for content ideas.
+    *   `llm_settings_override`: Overrides global LLM settings for all actions for this account.
+    *   `action_config`: Overrides the global `action_config` from `settings.json`, allowing for account-specific action behaviors (e.g., different delays, enabling/disabling certain actions).
 
 *   **Example `config/accounts.json` entry:**
     ```json
@@ -156,20 +163,20 @@ This file manages individual Twitter account configurations. It should be an arr
         "account_id": "tech_blogger_alpha",
         "is_active": true,
         "cookie_file_path": "config/tech_blogger_alpha_cookies.json",
-        "target_keywords_override": ["AI ethics", "future of work", "data privacy"],
+        "target_keywords": ["AI ethics", "future of work", "data privacy"],
+        "competitor_profiles": ["https://x.com/some_competitor"],
         "llm_settings_override": {
           "service_preference": "openai",
           "model_name_override": "gpt-4o"
         },
-        "action_config_override": {
+        "action_config": {
           "enable_keyword_replies": true,
           "max_replies_per_keyword_run": 3
         }
       }
-      // ... more accounts
     ]
     ```
-    *(Refer to the example in the original README section for a more detailed structure if needed, or adapt based on current `data_models.py`.)*
+    *(Refer to `src/data_models.py` for the full `AccountConfig` structure.)*
 
 *   **Obtaining Cookies:** Use browser developer tools (e.g., "EditThisCookie" extension) to export cookies for `x.com` after logging in. Save them as a JSON array of cookie objects if using `cookie_file_path`.
 
@@ -181,12 +188,12 @@ This file contains global configurations for the application.
     *   `api_keys`: Store API keys for LLM services (e.g., `openai_api_key`, `gemini_api_key`).
     *   `twitter_automation`:
         *   `action_config`: Default behaviors for automation actions (e.g., `max_posts_per_run`, `min_likes_for_repost`).
-        *   `response_interval_seconds`: Default delay between actions.
+        *   `message_source_to_account_map`: A dictionary mapping a message `source` string to an `account_id` for the queue-based publisher. Example: `{"source_app_1": "tech_blogger_alpha"}`.
         *   `media_directory`: Path to store downloaded media.
     *   `logging`: Configuration for the logger.
     *   `browser_settings`: Settings for Selenium WebDriver (e.g., `headless` mode).
 
-*   **Important Note:** Content source lists like `target_keywords`, `competitor_profiles`, etc., are primarily managed per-account in `config/accounts.json`. The global `action_config` in `settings.json` defines default *how* actions run, which can be overridden per account.
+*   **Important Note:** Content source lists like `target_keywords` and `competitor_profiles` are now managed per-account in `config/accounts.json`. The global `action_config` in `settings.json` defines default *how* actions run, which can be overridden per account.
 
 ### 6. Environment Variables (`.env`) (Optional)
 
@@ -202,13 +209,37 @@ For sensitive data like API keys, you can use a `.env` file in the project root.
 
 ## Running the Application
 
-Execute the main orchestrator script from the project root:
+The application has two main entry points:
 
+### 1. Main Orchestrator (`main.py`)
+
+This script runs a comprehensive set of automated actions based on your configuration, such as scraping, content generation, replying, and liking. It iterates through all active accounts and performs the tasks enabled for them.
+
+To run the main orchestrator:
 ```bash
 python src/main.py
 ```
 
-The orchestrator will iterate through active accounts in `config/accounts.json` and perform actions based on their respective configurations and global settings.
+### 2. Queue-Based Publisher (`publish_queue_messages.py`)
+
+This script provides a simple way to publish tweets from external sources. It watches a directory for new message files (a simple file-based queue) and posts them to the appropriate Twitter account.
+
+To run the queue publisher:
+```bash
+python src/publish_queue_messages.py
+```
+
+**How the Queue Works:**
+*   An external process can create a JSON file in the queue directory (default: `/tmp/twitter_queue`).
+*   The JSON message should have the following structure:
+    ```json
+    {
+      "type": "generic_message_to_publish",
+      "source": "source_app_1",
+      "text": "This is the content of the tweet to be published."
+    }
+    ```
+*   The `source` field is used to look up the target `account_id` in the `message_source_to_account_map` setting in your `config/settings.json`.
 
 ## Development Notes
 
