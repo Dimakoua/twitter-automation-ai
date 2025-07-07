@@ -391,6 +391,12 @@ class TwitterOrchestrator:
                             )
                             continue
 
+                        if "FALSE" in generated_reply_text:
+                            logger.info(
+                                f"Post is not relevant. Skipping. Post: {scraped_tweet_to_reply.text_content}"
+                            )
+                            continue
+
                         logger.info(
                             f"[{account.account_id}] Attempting to post reply to tweet {scraped_tweet_to_reply.tweet_id}..."
                         )
