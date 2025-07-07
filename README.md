@@ -11,6 +11,19 @@
 
 **Advanced Twitter Automation AI** is a modular Python-based framework designed for automating a wide range of Twitter (now X.com) interactions. It supports multiple accounts and leverages Selenium for robust browser automation, with optional integration of Large Language Models (LLMs) like OpenAI's GPT and Google's Gemini for intelligent content generation, analysis, and engagement.
 
+## Key Changes in This Fork
+
+This fork includes several key improvements and fixes over the original repository to enhance stability, configuration, and reliability:
+
+*   **Core Stability:** The initial codebase has been refactored and cleaned up to ensure the application runs reliably out of the box.
+*   **Containerization Support:** A container file has been added, allowing for easy setup and deployment using technologies like Docker.
+*   **Robust Publishing:** The tweet publisher has been fixed to handle cases where UI elements are covered by another element (e.g., pop-ups or overlays) by implementing a JavaScript-based "force click". This makes publishing actions significantly more reliable.
+*   **Flexible & Secure Configuration:**
+    *   You can now securely load account cookies from environment variables, in addition to file paths or direct JSON.
+    *   A bug preventing AI service API keys from being correctly read from environment variables has been fixed.
+*   **Dynamic Prompts:** The prompt for generating quote tweets (`prompt_for_quote_tweet_from_competitor`) is now an array in the configuration, allowing the bot to randomly select a prompt for more natural and varied content.
+*   **Tested LLM Service:** Out of the supported AI services (Gemini, OpenAI, Azure), only **Gemini** has been fully tested and is confirmed to be working in this fork. Other services might require configuration adjustments or code fixes.
+
 ## Table of Contents
 
 - [Advanced Twitter Automation AI](#advanced-twitter-automation-ai)
@@ -54,9 +67,11 @@
     *   Analyze competitor activity and engage strategically.
 *   **Configurable Automation:**
     *   Fine-grained control over automation parameters via JSON configuration files.
+    *   **Dynamic Prompts:** Use arrays in configuration for prompts (e.g., for quote tweets) to allow for randomized, more natural-sounding content.
     *   **Queue-Based Publishing:** Publish tweets from external systems by dropping simple JSON messages into a file-based queue. Ideal for decoupled architectures.
     *   Per-account overrides for keywords, target profiles, LLM settings, and action behaviors.
-*   **Browser Automation:** Uses Selenium for interacting with Twitter, handling dynamic content and complex UI elements.
+    *   **Secure Configuration:** Load sensitive data like API keys and account cookies from environment variables for better security and deployment flexibility.
+*   **Robust Browser Automation:** Uses Selenium for interacting with Twitter. Includes a "force click" mechanism to handle dynamic content and UI overlays, making publishing actions significantly more reliable.
 *   **Modular Design:** Easily extendable with new features and functionalities.
 *   **Logging:** Comprehensive logging for monitoring and debugging.
 
@@ -149,30 +164,49 @@ This file manages individual Twitter account configurations. It should be an arr
 *   **Key Fields per Account:**
     *   `account_id`: A unique identifier for the account.
     *   `is_active`: Boolean, set to `true` to enable automation for this account.
-    *   `cookie_file_path`: Path to a JSON file containing cookies for the account (e.g., `config/my_account_cookies.json`).
-    *   `cookies`: Alternatively, an array of cookie objects can be provided directly.
+    *   **Cookie Configuration (Priority Order):** The application uses the first valid cookie source it finds, in this order:
+        1.  `cookies`: An array of cookie objects provided directly in the JSON.
+        2.  `cookie_file_path`: A path to a JSON file containing an array of cookie objects (e.g., `config/my_account_cookies.json`).
+        3.  `cookie_env_name`: The name of an environment variable that contains the cookie data as a JSON string.
     *   `target_keywords`: A list of keywords for this account to track for replies.
     *   `competitor_profiles`: A list of competitor profile URLs to scrape for content ideas.
     *   `llm_settings_override`: Overrides global LLM settings for all actions for this account.
     *   `action_config`: Overrides the global `action_config` from `settings.json`, allowing for account-specific action behaviors (e.g., different delays, enabling/disabling certain actions).
 
-*   **Example `config/accounts.json` entry:**
+*   **Example `config/accounts.json` showing different cookie methods:**
     ```json
     [
       {
-        "account_id": "tech_blogger_alpha",
+        "account_id": "user_with_cookie_file",
         "is_active": true,
-        "cookie_file_path": "config/tech_blogger_alpha_cookies.json",
-        "target_keywords": ["AI ethics", "future of work", "data privacy"],
-        "competitor_profiles": ["https://x.com/some_competitor"],
-        "llm_settings_override": {
-          "service_preference": "openai",
-          "model_name_override": "gpt-4o"
-        },
+        "cookie_file_path": "config/user_one_cookies.json",
+        "target_keywords": ["AI ethics", "future of work"],
         "action_config": {
           "enable_keyword_replies": true,
-          "max_replies_per_keyword_run": 3
+          "max_replies_per_keyword_run": 2,
+          "prompt_for_quote_tweet_from_competitor": [
+            "Interesting take from {user_handle}. My thoughts:",
+            "Adding to this point by {user_handle}:",
+            "Here's another perspective on what {user_handle} said about '{tweet_text}':"
+          ]
         }
+      },
+      {
+        "account_id": "user_with_env_var",
+        "is_active": true,
+        "cookie_env_name": "USER_TWO_COOKIES",
+        "competitor_profiles": ["https://x.com/some_competitor"]
+      },
+      {
+        "account_id": "user_with_direct_cookies",
+        "is_active": false,
+        "cookies": [
+          {
+            "name": "auth_token",
+            "value": "direct_token_value_in_json",
+            "domain": ".x.com"
+          }
+        ]
       }
     ]
     ```
@@ -203,7 +237,7 @@ For sensitive data like API keys, you can use a `.env` file in the project root.
     ```env
     OPENAI_API_KEY="your_openai_api_key"
     GEMINI_API_KEY="your_gemini_api_key"
-    # Add other sensitive variables as needed
+    USER_TWO_COOKIES='[{"name": "auth_token", "value": "your_auth_token_from_env", "domain": ".x.com"}]'
     ```
     The application is designed to prioritize environment variables for API keys if available.
 
@@ -243,8 +277,10 @@ python src/publish_queue_messages.py
 
 ## Development Notes
 
-*   **Logging:** Detailed logs are output to the console. Configuration is in `config/settings.json` and managed by `src/utils/logger.py`.
+*   **Logging:** Detailed logs are output to the console and/or a file. Configuration is in `config/settings.json` and managed by `src/utils/logger.py`.
+*   **Customizing AI Prompts:** The personality and behavior of the AI are defined by prompts. Some prompts, like for quote tweets, are configurable in `config/settings.json` under `action_config`. Others, like the main reply prompt in `src/main.py`, are currently defined directly in the code. Modifying these prompts is the primary way to tailor the bot's responses to your specific needs (e.g., for a specific niche like crypto, as seen in the default reply prompt).
 *   **Selenium Selectors:** Twitter's (X.com) UI is subject to change. XPath and CSS selectors in `src/features/scraper.py` and `src/features/publisher.py` may require updates if the site structure changes.
+*   **LLM Service Status:** As mentioned above, only the Gemini integration is confirmed to be working. If you plan to use OpenAI or Azure, you may need to debug their respective client initializations and API calls in `src/core/llm_service.py`.
 *   **Error Handling:** The project includes basic error handling. Enhancements with more specific exception management and retry mechanisms are potential areas for improvement.
 *   **Extensibility:** To add new features:
     1.  Define necessary data structures in `src/data_models.py`.
