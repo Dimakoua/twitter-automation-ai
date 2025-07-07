@@ -359,18 +359,22 @@ class TwitterOrchestrator:
                         #     if scraped_tweet_to_reply.is_confirmed_thread
                         #     else "This is a standalone tweet."
                         # )
-
                         reply_prompt = f"""
-                            Generate a concise, insightful, and engaging reply to the tweet below.
+                            Generate a concise, original, and engaging reply to the tweet below.
 
                             Original tweet by @{scraped_tweet_to_reply.user_handle or "user"}:  
                             "{scraped_tweet_to_reply.text_content}"
 
                             Instructions:
-                            - Reply only if the tweet is about crypto, memecoins, or altcoins. Otherwise, return: FALSE  
-                            - Respond naturally and intelligently.  
-                            - Keep it short, clean, and ready to post.  
-                            - If relevant, organically promote this bot: https://t.me/to_the_meme_bot (signals for memecoins)
+                            - Only reply if the tweet is about crypto, memecoins, or altcoins. Otherwise, return: FALSE
+                            - Write like a savvy, plugged-in crypto trader. Keep it sharp and clean.
+                            - Do NOT use any of the following:
+                            * Clichés like "DYOR", "classic cycle", "to the moon", etc.
+                            * Dashes (– or -)  
+                            * Mentions or links (including usernames like @example)  
+                            - If the tweet is about memecoins or low caps, you may subtly hint at smarter tools or sources that sharper traders use  
+                            - Do not sound promotional. Be casual, confident, and a little cryptic  
+                            - Reply should feel like a smart trader dropping a quick insight
 
                             Your reply:
                         """
