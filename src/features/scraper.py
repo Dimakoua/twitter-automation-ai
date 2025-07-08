@@ -75,7 +75,8 @@ class TweetScraper:
         try:
             # Extract user name
             user_name_element = card_element.find_element(
-                By.XPATH, './/div[@data-testid="User-Name"]//span[1]//span'
+                By.XPATH,
+                './/div[@data-testid="User-Name"]//div[1]//div//a//div//div[1]//span//span',
             )
             user_name = user_name_element.text if user_name_element else None
 
@@ -269,6 +270,11 @@ class TweetScraper:
                 is_thread_candidate=is_thread_candidate,
             )
 
+        except StaleElementReferenceException as e:
+            logger.error(f"Error StaleElementReferenceException: {e}", exc_info=True)
+            # This specific exception should be re-raised so the calling loop can handle it,
+            # typically by re-fetching the elements.
+            raise
         except Exception as e:
             logger.error(f"Error parsing tweet card: {e}", exc_info=True)
             return None
@@ -314,7 +320,10 @@ class TweetScraper:
 
         while len(scraped_tweets) < max_tweets:
             try:
+                logger.info("BEFORE _get_tweet_cards_from_page")
                 tweet_card_elements = self._get_tweet_cards_from_page()
+                logger.info("AFTER _get_tweet_cards_from_page")
+
                 if not tweet_card_elements:
                     logger.info("No tweet card elements found on the page.")
                     scroll_attempts_with_no_new_tweets += 1  # Count as no new tweets
@@ -339,18 +348,10 @@ class TweetScraper:
                     if len(scraped_tweets) >= max_tweets:
                         break
 
-                    # Scroll element into view (helps with lazy loading and interaction)
-                    try:
-                        self.driver.execute_script(
-                            "arguments[0].scrollIntoView({block: 'center'});", card_el
-                        )
-                        time.sleep(0.2)  # Brief pause after scroll
-                    except Exception as scroll_err:
-                        logger.debug(
-                            f"Could not scroll tweet card into view: {scroll_err}"
-                        )
-
+                    logger.info("BEFORE _parse_tweet_card")
                     parsed_tweet = self._parse_tweet_card(card_el)
+                    logger.info("AFTER _parse_tweet_card")
+
                     if parsed_tweet and parsed_tweet.tweet_id not in seen_tweet_ids:
                         scraped_tweets.append(parsed_tweet)
                         seen_tweet_ids.add(parsed_tweet.tweet_id)
@@ -361,6 +362,17 @@ class TweetScraper:
                         #     0,
                         #     no_tweets_limit=(max_tweets == float("inf")),
                         # )
+
+                # Scroll element into view (helps with lazy loading and interaction)
+                try:
+                    self.driver.execute_script(
+                        "arguments[0].scrollIntoView({block: 'center'});", card_el
+                    )
+                    time.sleep(0.2)  # Brief pause after scroll
+                except Exception as scroll_err:
+                    logger.debug(
+                        f"Could not scroll tweet card into view: {scroll_err}"
+                    )
 
                 if new_tweets_found_this_scroll == 0:
                     scroll_attempts_with_no_new_tweets += 1
@@ -394,9 +406,9 @@ class TweetScraper:
                     f"Timeout during tweet scraping for {url}. May proceed with fewer tweets."
                 )
                 break
-            except StaleElementReferenceException:
+            except StaleElementReferenceException as e:
                 logger.warning(
-                    "Encountered stale element reference, attempting to re-fetch cards."
+                    f"Encountered stale element reference, attempting to re-fetch cards. {e}"
                 )
                 time.sleep(1)  # Brief pause before retrying
                 continue  # Retry the loop

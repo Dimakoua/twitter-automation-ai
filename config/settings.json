@@ -82,7 +82,17 @@
       "max_curated_posts_per_run": 1,
       "enable_liking_tweets": true,
       "max_likes_per_run": 5,
-      "like_tweets_from_keywords": null,
+      "like_tweets_from_keywords": [
+            "MEMECOIN UPDATES",
+            "meme coin",
+            "altcoin pump",
+            "shitcoin",
+            "crypto signal",
+            "low cap gem",
+            "100x crypto",
+            "crypto alpha",
+            "crypto trend"
+      ],
       "like_tweets_from_feed": true,
       "enable_thread_analysis": true,
       "llm_settings_for_post": {
