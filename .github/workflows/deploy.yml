@@ -48,8 +48,6 @@ jobs:
 
             # --- Stop Existing Processes ---
             echo "Stopping any running application processes..."
-            pkill -f "src/main.py" || echo "main.py was not running."
-            pkill -f "src/publish_queue_messages.py" || echo "publish_queue_messages.py was not running."
 
             # --- Setup Virtual Environment and Dependencies ---
             echo "Setting up Python virtual environment and installing dependencies..."
