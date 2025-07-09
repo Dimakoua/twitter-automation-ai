@@ -71,7 +71,6 @@ jobs:
 
             # Define the cron jobs with a unique tag for easy management
             CRON_TAG="# TwitterAutomationAI:${{ vars.APP_NAME }}"
-            CRON_JOB_MAIN="0 */3 * * * cd $APP_PATH && $PYTHON_EXEC $MAIN_SCRIPT >> $LOG_DIR/main_orchestrator.log 2>&1 $CRON_TAG"
             CRON_JOB_QUEUE="*/5 * * * * cd $APP_PATH && $PYTHON_EXEC $QUEUE_SCRIPT >> $LOG_DIR/queue_publisher.log 2>&1 $CRON_TAG"
 
             # Remove old cron jobs for this app to prevent duplication on re-deployments
