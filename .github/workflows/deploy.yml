@@ -69,8 +69,7 @@ jobs:
 
             # Define the cron jobs with a unique tag for easy management
             CRON_TAG="# TwitterAutomationAI:${{ vars.APP_NAME }}"
-            CRON_JOB_QUEUE="*/5 * * * * cd $APP_PATH && $PYTHON_EXEC $QUEUE_SCRIPT >> $LOG_DIR/queue_publisher.log 2>&1 $CRON_TAG"
-
+            CRON_JOB_QUEUE="*/5 * * * * cd $APP_PATH && docker-compose exec twitter-automation python src/publish_queue_messages.py >> /tmp/cron.log 2>&1 $CRON_TAG"
             # Remove old cron jobs for this app to prevent duplication on re-deployments
             (crontab -l 2>/dev/null | grep -v "$CRON_TAG" || true) | crontab -
 
