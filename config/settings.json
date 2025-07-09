@@ -118,7 +118,7 @@
     "format": "%(asctime)s - %(levelname)s - %(module)s - %(message)s"
   },
   "browser_settings": {
-    "type": "firefox",
+    "type": "chrome",
     "headless": true,
     "user_agent_generation": "random",
     "custom_user_agent": null,
