@@ -30,6 +30,8 @@ class TweetAnalyzer:
         Uses LLM to analyze tweet content and determine if it's likely part of a thread.
         Returns True if determined to be a thread, False otherwise.
         """
+        return False
+
         if not tweet.text_content:
             return False
 

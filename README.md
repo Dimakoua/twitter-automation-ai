@@ -7,7 +7,22 @@
 [![Stars](https://img.shields.io/github/stars/ihuzaifashoukat/twitter-automation-ai)](https://github.com/ihuzaifashoukat/twitter-automation-ai/stargazers)
 [![Contributors](https://img.shields.io/github/contributors/ihuzaifashoukat/twitter-automation-ai)](https://github.com/ihuzaifashoukat/twitter-automation-ai/graphs/contributors)
 
+> **Note:** This repository is a fork of the original [Advanced Twitter Automation AI](https://github.com/ihuzaifashoukat/twitter-automation-ai) project. It has been modified and tailored to suit specific personal requirements and may differ from the original version.
+
 **Advanced Twitter Automation AI** is a modular Python-based framework designed for automating a wide range of Twitter (now X.com) interactions. It supports multiple accounts and leverages Selenium for robust browser automation, with optional integration of Large Language Models (LLMs) like OpenAI's GPT and Google's Gemini for intelligent content generation, analysis, and engagement.
+
+## Key Changes in This Fork
+
+This fork includes several key improvements and fixes over the original repository to enhance stability, configuration, and reliability:
+
+*   **Core Stability:** The initial codebase has been refactored and cleaned up to ensure the application runs reliably out of the box.
+*   **Containerization Support:** A container file has been added, allowing for easy setup and deployment using technologies like Docker.
+*   **Robust Publishing:** The tweet publisher has been fixed to handle cases where UI elements are covered by another element (e.g., pop-ups or overlays) by implementing a JavaScript-based "force click". This makes publishing actions significantly more reliable.
+*   **Flexible & Secure Configuration:**
+    *   You can now securely load account cookies from environment variables, in addition to file paths or direct JSON.
+    *   A bug preventing AI service API keys from being correctly read from environment variables has been fixed.
+*   **Dynamic Prompts:** The prompt for generating quote tweets (`prompt_for_quote_tweet_from_competitor`) is now an array in the configuration, allowing the bot to randomly select a prompt for more natural and varied content.
+*   **Tested LLM Service:** Out of the supported AI services (Gemini, OpenAI, Azure), only **Gemini** has been fully tested and is confirmed to be working in this fork. Other services might require configuration adjustments or code fixes.
 
 ## Table of Contents
 
@@ -52,8 +67,11 @@
     *   Analyze competitor activity and engage strategically.
 *   **Configurable Automation:**
     *   Fine-grained control over automation parameters via JSON configuration files.
+    *   **Dynamic Prompts:** Use arrays in configuration for prompts (e.g., for quote tweets) to allow for randomized, more natural-sounding content.
+    *   **Queue-Based Publishing:** Publish tweets from external systems by dropping simple JSON messages into a file-based queue. Ideal for decoupled architectures.
     *   Per-account overrides for keywords, target profiles, LLM settings, and action behaviors.
-*   **Browser Automation:** Uses Selenium for interacting with Twitter, handling dynamic content and complex UI elements.
+    *   **Secure Configuration:** Load sensitive data like API keys and account cookies from environment variables for better security and deployment flexibility.
+*   **Robust Browser Automation:** Uses Selenium for interacting with Twitter. Includes a "force click" mechanism to handle dynamic content and UI overlays, making publishing actions significantly more reliable.
 *   **Modular Design:** Easily extendable with new features and functionalities.
 *   **Logging:** Comprehensive logging for monitoring and debugging.
 
@@ -92,6 +110,7 @@ twitter-automation-ai/
 │   │   └── scroller.py
 │   ├── data_models.py      # Pydantic models for data structures
 │   ├── main.py             # Main orchestrator script
+│   ├── publish_queue_messages.py # Script to publish tweets from a file queue
 │   └── __init__.py
 ├── .env                    # Environment variables (optional, for API keys)
 ├── requirements.txt        # Python dependencies
@@ -145,31 +164,53 @@ This file manages individual Twitter account configurations. It should be an arr
 *   **Key Fields per Account:**
     *   `account_id`: A unique identifier for the account.
     *   `is_active`: Boolean, set to `true` to enable automation for this account.
-    *   `cookie_file_path`: Path to a JSON file containing cookies for the account (e.g., `config/my_account_cookies.json`).
-    *   `cookies`: Alternatively, an array of cookie objects can be provided directly.
-    *   **Overrides:** You can specify per-account overrides for various settings like `target_keywords_override`, `competitor_profiles_override`, `llm_settings_override`, and `action_config_override`. If an override is not present, the global defaults from `config/settings.json` will be used.
+    *   **Cookie Configuration (Priority Order):** The application uses the first valid cookie source it finds, in this order:
+        1.  `cookies`: An array of cookie objects provided directly in the JSON.
+        2.  `cookie_file_path`: A path to a JSON file containing an array of cookie objects (e.g., `config/my_account_cookies.json`).
+        3.  `cookie_env_name`: The name of an environment variable that contains the cookie data as a JSON string.
+    *   `target_keywords`: A list of keywords for this account to track for replies.
+    *   `competitor_profiles`: A list of competitor profile URLs to scrape for content ideas.
+    *   `llm_settings_override`: Overrides global LLM settings for all actions for this account.
+    *   `action_config`: Overrides the global `action_config` from `settings.json`, allowing for account-specific action behaviors (e.g., different delays, enabling/disabling certain actions).
 
-*   **Example `config/accounts.json` entry:**
+*   **Example `config/accounts.json` showing different cookie methods:**
     ```json
     [
       {
-        "account_id": "tech_blogger_alpha",
+        "account_id": "user_with_cookie_file",
         "is_active": true,
-        "cookie_file_path": "config/tech_blogger_alpha_cookies.json",
-        "target_keywords_override": ["AI ethics", "future of work", "data privacy"],
-        "llm_settings_override": {
-          "service_preference": "openai",
-          "model_name_override": "gpt-4o"
-        },
-        "action_config_override": {
+        "cookie_file_path": "config/user_one_cookies.json",
+        "target_keywords": ["AI ethics", "future of work"],
+        "action_config": {
           "enable_keyword_replies": true,
-          "max_replies_per_keyword_run": 3
+          "max_replies_per_keyword_run": 2,
+          "prompt_for_quote_tweet_from_competitor": [
+            "Interesting take from {user_handle}. My thoughts:",
+            "Adding to this point by {user_handle}:",
+            "Here's another perspective on what {user_handle} said about '{tweet_text}':"
+          ]
         }
+      },
+      {
+        "account_id": "user_with_env_var",
+        "is_active": true,
+        "cookie_env_name": "USER_TWO_COOKIES",
+        "competitor_profiles": ["https://x.com/some_competitor"]
+      },
+      {
+        "account_id": "user_with_direct_cookies",
+        "is_active": false,
+        "cookies": [
+          {
+            "name": "auth_token",
+            "value": "direct_token_value_in_json",
+            "domain": ".x.com"
+          }
+        ]
       }
-      // ... more accounts
     ]
     ```
-    *(Refer to the example in the original README section for a more detailed structure if needed, or adapt based on current `data_models.py`.)*
+    *(Refer to `src/data_models.py` for the full `AccountConfig` structure.)*
 
 *   **Obtaining Cookies:** Use browser developer tools (e.g., "EditThisCookie" extension) to export cookies for `x.com` after logging in. Save them as a JSON array of cookie objects if using `cookie_file_path`.
 
@@ -181,12 +222,12 @@ This file contains global configurations for the application.
     *   `api_keys`: Store API keys for LLM services (e.g., `openai_api_key`, `gemini_api_key`).
     *   `twitter_automation`:
         *   `action_config`: Default behaviors for automation actions (e.g., `max_posts_per_run`, `min_likes_for_repost`).
-        *   `response_interval_seconds`: Default delay between actions.
+        *   `message_source_to_account_map`: A dictionary mapping a message `source` string to an `account_id` for the queue-based publisher. Example: `{"source_app_1": "tech_blogger_alpha"}`.
         *   `media_directory`: Path to store downloaded media.
     *   `logging`: Configuration for the logger.
     *   `browser_settings`: Settings for Selenium WebDriver (e.g., `headless` mode).
 
-*   **Important Note:** Content source lists like `target_keywords`, `competitor_profiles`, etc., are primarily managed per-account in `config/accounts.json`. The global `action_config` in `settings.json` defines default *how* actions run, which can be overridden per account.
+*   **Important Note:** Content source lists like `target_keywords` and `competitor_profiles` are now managed per-account in `config/accounts.json`. The global `action_config` in `settings.json` defines default *how* actions run, which can be overridden per account.
 
 ### 6. Environment Variables (`.env`) (Optional)
 
@@ -196,24 +237,50 @@ For sensitive data like API keys, you can use a `.env` file in the project root.
     ```env
     OPENAI_API_KEY="your_openai_api_key"
     GEMINI_API_KEY="your_gemini_api_key"
-    # Add other sensitive variables as needed
+    USER_TWO_COOKIES='[{"name": "auth_token", "value": "your_auth_token_from_env", "domain": ".x.com"}]'
     ```
     The application is designed to prioritize environment variables for API keys if available.
 
 ## Running the Application
 
-Execute the main orchestrator script from the project root:
+The application has two main entry points:
 
+### 1. Main Orchestrator (`main.py`)
+
+This script runs a comprehensive set of automated actions based on your configuration, such as scraping, content generation, replying, and liking. It iterates through all active accounts and performs the tasks enabled for them.
+
+To run the main orchestrator:
 ```bash
 python src/main.py
 ```
 
-The orchestrator will iterate through active accounts in `config/accounts.json` and perform actions based on their respective configurations and global settings.
+### 2. Queue-Based Publisher (`publish_queue_messages.py`)
+
+This script provides a simple way to publish tweets from external sources. It watches a directory for new message files (a simple file-based queue) and posts them to the appropriate Twitter account.
+
+To run the queue publisher:
+```bash
+python src/publish_queue_messages.py
+```
+
+**How the Queue Works:**
+*   An external process can create a JSON file in the queue directory (default: `/tmp/twitter_queue`).
+*   The JSON message should have the following structure:
+    ```json
+    {
+      "type": "generic_message_to_publish",
+      "source": "source_app_1",
+      "text": "This is the content of the tweet to be published."
+    }
+    ```
+*   The `source` field is used to look up the target `account_id` in the `message_source_to_account_map` setting in your `config/settings.json`.
 
 ## Development Notes
 
-*   **Logging:** Detailed logs are output to the console. Configuration is in `config/settings.json` and managed by `src/utils/logger.py`.
+*   **Logging:** Detailed logs are output to the console and/or a file. Configuration is in `config/settings.json` and managed by `src/utils/logger.py`.
+*   **Customizing AI Prompts:** The personality and behavior of the AI are defined by prompts. Some prompts, like for quote tweets, are configurable in `config/settings.json` under `action_config`. Others, like the main reply prompt in `src/main.py`, are currently defined directly in the code. Modifying these prompts is the primary way to tailor the bot's responses to your specific needs (e.g., for a specific niche like crypto, as seen in the default reply prompt).
 *   **Selenium Selectors:** Twitter's (X.com) UI is subject to change. XPath and CSS selectors in `src/features/scraper.py` and `src/features/publisher.py` may require updates if the site structure changes.
+*   **LLM Service Status:** As mentioned above, only the Gemini integration is confirmed to be working. If you plan to use OpenAI or Azure, you may need to debug their respective client initializations and API calls in `src/core/llm_service.py`.
 *   **Error Handling:** The project includes basic error handling. Enhancements with more specific exception management and retry mechanisms are potential areas for improvement.
 *   **Extensibility:** To add new features:
     1.  Define necessary data structures in `src/data_models.py`.

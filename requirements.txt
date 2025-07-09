@@ -1,5 +1,5 @@
 selenium
-webdriver-manager
+webdriver-manager==3.8.6
 fake-headers
 pydantic
 langchain-google-genai

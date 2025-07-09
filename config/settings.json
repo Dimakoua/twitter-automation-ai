@@ -1,18 +1,28 @@
 {
   "api_keys": {
-    "gemini_api_key": "YOUR_GEMINI_API_KEY_HERE_OR_LEAVE_BLANK_IF_USING_ENV",
+    "gemini_api_key": "YOUR_GEMINI_API_KEY_HERE",
     "openai_api_key": "YOUR_OPENAI_API_KEY_HERE",
     "azure_openai_api_key": "YOUR_AZURE_OPENAI_API_KEY_HERE",
     "azure_openai_endpoint": "YOUR_AZURE_OPENAI_ENDPOINT_HERE",
     "azure_openai_deployment": "YOUR_AZURE_OPENAI_DEPLOYMENT_NAME_HERE",
     "azure_api_version": "2024-05-01-preview"
   },
+  "llm_settings": {
+    "gemini": {
+      "model": "gemini-1.5-flash-latest",
+      "max_tokens": 120,
+      "temperature": 0.7
+    }
+  },
   "twitter_automation": {
+    "message_source_to_account_map": {
+      "hourly_top_signal": "meme_coin_tracker_001",
+      "daily_top_signals_summary": "meme_coin_tracker_001"
+    },
     "response_interval_seconds": 300,
     "max_tweets_per_keyword_scrape": 15,
     "media_directory": "media_files",
     "processed_tweets_file": "processed_tweets_log.csv",
-    "cookie_file_per_account_in_accounts_json": true,
     "action_config": {
       "min_delay_between_actions_seconds": 60,
       "max_delay_between_actions_seconds": 180,
@@ -21,18 +31,69 @@
       "repost_only_tweets_with_media": false,
       "min_likes_for_repost_candidate": 10,
       "min_retweets_for_repost_candidate": 2,
-      "competitor_post_interaction_type": "repost",
-      "prompt_for_quote_tweet_from_competitor": "Interesting perspective by {user_handle}: '{tweet_text}'. What are your thoughts? #AI #Discussion",
-      "enable_keyword_replies": false,
+      "competitor_post_interaction_type": "quote_tweet",
+      "prompt_for_quote_tweet_from_competitor": [
+        "🚨 Signal from {user_handle}: Is this the next $DOGE?\n#MemeCoin #ToTheMeme #CryptoSignals",
+        "👀 Spotted via {user_handle} — Could this be the next $DOGE?\n#CryptoGem #MemeCoinWatch",
+        "📡 Alert from {user_handle}: Meme rocket incoming?\n#AltcoinSeason #CryptoSignals",
+        "💥 {user_handle} just dropped this. Are we early on the next big one?\n#MemeCoinHype #CryptoAlpha",
+        "🔥 {user_handle} called it. Could this moon like $DOGE?\n#MoonMission #CryptoRadar",
+        "🚀 Signal from {user_handle}: This meme coin might be cooking!\n#AltSeason #MemeMadness",
+        "💡 Spotted by {user_handle} — Is this the next cult coin?\n#DeFiMeme #CryptoClues",
+        "👽 {user_handle} found something wild... Next $DOGE?\n#MemeCoinAlpha #Underdog",
+        "📈 Tip from {user_handle}: This might be the breakout meme of the week!\n#NextDoge #CryptoWatch",
+        "🧠 Smart eyes from {user_handle} — this meme coin might just surprise us.\n#HiddenGem #CryptoAlpha",
+        "👑 {user_handle} may have spotted the next meme king.\n#MemeSeason #CryptoSignals",
+        "🛰️ Scoop from {user_handle}: Early signs of a meme pump!\n#AlphaLeak #MemeCoin",
+        "⚠️ Heads up from {user_handle}: This coin is making noise.\n#CryptoBuzz #NextBigThing",
+        "🎯 On the radar via {user_handle} — Don’t sleep on this.\n#MemeRadar #AltcoinAlert",
+        "🚨 From {user_handle}: Could this be the sleeper meme of the summer?\n#CryptoAlpha #MoonSoon",
+        "🌝 {user_handle} might have found a future moonshot.\n#MemeMania #ToTheMoon",
+        "💣 Big call from {user_handle} — Next meme explosion?\n#DegensUnite #AltcoinSeason",
+        "🧐 Insight via {user_handle}: Worth keeping an eye on?\n#Watchlist #CryptoMoves",
+        "🧨 Early alpha from {user_handle}: Pre-viral vibes?\n#CryptoLeaks #MoonHunt",
+        "💬 {user_handle} with a bold call — Next viral meme token?\n#DegenAlert #AltcoinHype",
+        "🗞️ Breaking via {user_handle}: Could this meme token dominate the charts?\n#CryptoTrends #MemeWatch",
+        "🛸 Hot drop from {user_handle}: This might be the one!\n#IntergalacticDegen #CryptoHunt",
+        "🐸 {user_handle} spotted it — Is this the next $PEPE?\n#MemeMarket #AlphaAlert",
+        "🧃 Juice from {user_handle}: Meme vibes are strong here.\n#MemeCoinEnergy #CryptoSqueeze",
+        "🦍 {user_handle} going full degen on this one. Should we ape?\n#ApeTogether #AltcoinPick",
+        "👻 Ghost pick from {user_handle} — Underrated and under the radar.\n#MemeGhost #CryptoUnderdog",
+        "🌊 Tidal wave forming? {user_handle} just flagged this.\n#MemeWave #CryptoStorm",
+        "📊 Sharp eyes from {user_handle}: This coin's chart looks spicy!\n#TA #MemeCoinSeason",
+        "🍿 {user_handle} just dropped popcorn — something’s about to pop.\n#MemeDrama #CryptoAlert",
+        "🎮 Game on — {user_handle} thinks this one’s got legs.\n#MetaCoin #MemePlay",
+        "💎 Diamond alpha via {user_handle} — Pure meme gold?\n#HiddenAlpha #CryptoDiamond",
+        "🪙 Microcap magic? {user_handle} is betting big.\n#Next100x #MemeGains",
+        "📢 Word on the street from {user_handle}: This one’s gaining traction.\n#ViralToken #CryptoTrend",
+        "🐕 {user_handle} barking up a new tree — meme dog incoming?\n#DogCoin #MemeticEnergy",
+        "⛏️ Freshly dug by {user_handle} — Brand new meme gem.\n#CryptoMining #AltcoinAlert",
+        "🚧 Under construction but promising — {user_handle} flagged this early.\n#PreLaunch #MemeAlpha",
+        "🦄 Rare pick from {user_handle}: Don’t miss this meme unicorn.\n#MythicalGains #CryptoFantasy",
+        "📦 Low float. High hype. {user_handle} thinks this will run.\n#LowCapGem #MemeMomentum",
+        "🔮 Visionary move from {user_handle}: Could this be a future blue-chip meme?\n#DegenWisdom #AltAlpha",
+        "🍀 {user_handle} got lucky last time — following their call again.\n#MemeFortune #CryptoLuck"
+      ],
+      "enable_keyword_replies": true,
       "max_replies_per_keyword_run": 2,
       "reply_only_to_recent_tweets_hours": 24,
       "avoid_replying_to_own_tweets": true,
       "enable_content_curation_posts": false,
       "max_curated_posts_per_run": 1,
-      "enable_liking_tweets": false,
+      "enable_liking_tweets": true,
       "max_likes_per_run": 5,
-      "like_tweets_from_keywords": null,
-      "like_tweets_from_feed": false,
+      "like_tweets_from_keywords": [
+            "MEMECOIN UPDATES",
+            "meme coin",
+            "altcoin pump",
+            "shitcoin",
+            "crypto signal",
+            "low cap gem",
+            "100x crypto",
+            "crypto alpha",
+            "crypto trend"
+      ],
+      "like_tweets_from_feed": true,
       "enable_thread_analysis": true,
       "llm_settings_for_post": {
         "service_preference": "gemini",
@@ -73,6 +134,7 @@
       "--disable-popup-blocking"
     ],
     "page_load_timeout_seconds": 30,
-    "script_timeout_seconds": 30
+    "script_timeout_seconds": 30,
+    "cookie_domain_url": "https://x.com"
   }
 }

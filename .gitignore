@@ -179,4 +179,5 @@ processed_tweets_log.csv
 # Backup files
 *.bak
 *.swp
+.wdm
 *~
