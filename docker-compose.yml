@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  twitter-automation:
+    build: .
+    container_name: twitter-automation-ai
+    volumes:
+      - ./config:/app/config
+      - ./media_files:/app/media_files
+      - ./queue:/app/queue
+      - ./.wdm_cache:/app/.wdm_cache
+    restart: unless-stopped
