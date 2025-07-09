@@ -101,8 +101,8 @@ class LikeAndCommentProcessor:
                     likes_done_this_run += 1
                     await asyncio.sleep(
                         random.uniform(
-                            action_config.min_delay_between_actions_seconds / 2,
-                            action_config.max_delay_between_actions_seconds / 2,
+                            action_config.min_delay_between_actions_seconds,
+                            action_config.max_delay_between_actions_seconds,
                         )
                     )
 

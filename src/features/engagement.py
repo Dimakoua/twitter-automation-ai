@@ -135,7 +135,7 @@ class TweetEngagement:
             logger.info(f"Clicked like button for tweet {tweet_id}.")
 
             # Optionally, wait for a visual confirmation (e.g., button state change)
-            time.sleep(180)  # Brief pause for action to register
+            time.sleep(60)  # Brief pause for action to register
 
             # Verify if liked (e.g., check aria-label again)
             # Re-fetch the button as its state might have changed its properties
