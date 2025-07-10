@@ -153,6 +153,8 @@ async def main():
             logger.error(
                 f"Failed to post message from source: {message_source} to account: {target_account_id}."
             )
+        
+        await asyncio.sleep(1800)
 
     # Ensure all browser managers are closed at the end of the script's run
     for account_id, bm in account_browser_managers.items():
