@@ -83,78 +83,75 @@ async def main():
 
     processed_messages_count = 0
 
-    while True:
-        message = queue.get(block=False, poll_interval=1)
+    message = queue.get(block=False, poll_interval=1)
 
-        if message is None:
-            # No more messages in the queue
-            if processed_messages_count == 0:
-                logger.info("No new messages found in queue to process. Exiting.")
-            else:
-                logger.info(
-                    f"Finished processing {processed_messages_count} messages from queue."
-                )
-            break
-
-        message_type = message.get("type")
-        message_source = message.get("source")
-        tweet_text = message.get("text")
-
-        if (
-            message_type != "generic_message_to_publish"
-            or not tweet_text
-            or not message_source
-        ):
-            logger.warning(
-                f"Skipping malformed or irrelevant message. Type: {message_type}, Source: {message_source}, Text: {tweet_text[:50] if tweet_text else 'N/A'}"
-            )
-            continue
-
-        target_account_id = message_source_to_account_map.get(message_source)
-
-        if not target_account_id:
-            logger.error(
-                f"No target account configured for message source '{message_source}'. Message will not be posted."
-            )
-            continue
-
-        publisher = await get_publisher_for_account(
-            target_account_id, config_loader, accounts_data
-        )
-        if not publisher:
-            logger.error(
-                f"Could not get publisher for account '{target_account_id}'. Skipping message from source '{message_source}'."
-            )
-            continue
-
-        final_tweet_content = TweetContent(text=tweet_text)
-
-        logger.info(
-            f"Attempting to post message from source '{message_source}' to account '{target_account_id}'. Content preview: {final_tweet_content.text[:100]}..."
-        )
-
-        post_success = False
-        try:
-            post_success = await publisher.post_new_tweet(
-                final_tweet_content, llm_settings=None
-            )
-        except Exception as e:
-            logger.error(
-                f"Error during tweet posting for source '{message_source}': {e}",
-                exc_info=True,
-            )
-
-        if post_success:
-            logger.info(
-                f"Successfully posted message from source: {message_source} to account: {target_account_id}."
-            )
-            processed_messages_count += 1
+    if message is None:
+        # No more messages in the queue
+        if processed_messages_count == 0:
+            logger.info("No new messages found in queue to process. Exiting.")
         else:
-            logger.error(
-                f"Failed to post message from source: {message_source} to account: {target_account_id}."
+            logger.info(
+                f"Finished processing {processed_messages_count} messages from queue."
             )
-        
-        await asyncio.sleep(1800)
+        break
+
+    message_type = message.get("type")
+    message_source = message.get("source")
+    tweet_text = message.get("text")
+
+    if (
+        message_type != "generic_message_to_publish"
+        or not tweet_text
+        or not message_source
+    ):
+        logger.warning(
+            f"Skipping malformed or irrelevant message. Type: {message_type}, Source: {message_source}, Text: {tweet_text[:50] if tweet_text else 'N/A'}"
+        )
+        continue
+
+    target_account_id = message_source_to_account_map.get(message_source)
+
+    if not target_account_id:
+        logger.error(
+            f"No target account configured for message source '{message_source}'. Message will not be posted."
+        )
+        continue
+
+    publisher = await get_publisher_for_account(
+        target_account_id, config_loader, accounts_data
+    )
+    if not publisher:
+        logger.error(
+            f"Could not get publisher for account '{target_account_id}'. Skipping message from source '{message_source}'."
+        )
+        continue
+
+    final_tweet_content = TweetContent(text=tweet_text)
+
+    logger.info(
+        f"Attempting to post message from source '{message_source}' to account '{target_account_id}'. Content preview: {final_tweet_content.text[:100]}..."
+    )
+
+    post_success = False
+    try:
+        post_success = await publisher.post_new_tweet(
+            final_tweet_content, llm_settings=None
+        )
+    except Exception as e:
+        logger.error(
+            f"Error during tweet posting for source '{message_source}': {e}",
+            exc_info=True,
+        )
+
+    if post_success:
+        logger.info(
+            f"Successfully posted message from source: {message_source} to account: {target_account_id}."
+        )
+        processed_messages_count += 1
+    else:
+        logger.error(
+            f"Failed to post message from source: {message_source} to account: {target_account_id}."
+        )
 
     # Ensure all browser managers are closed at the end of the script's run
     for account_id, bm in account_browser_managers.items():
