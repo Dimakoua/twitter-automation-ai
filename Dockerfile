@@ -19,4 +19,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY --chown=appuser:appuser . .
 
 # Command to run the application
-CMD ["python", "src/main.py"]
+CMD ["python", "src/publish_queue_messages.py"]
