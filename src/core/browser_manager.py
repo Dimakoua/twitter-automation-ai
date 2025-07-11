@@ -217,6 +217,12 @@ class BrowserManager:
         user_agent = self._get_user_agent()
         options.add_argument(f"user-agent={user_agent}")
 
+        # Explicitly enable JavaScript
+        if isinstance(options, FirefoxOptions):
+            options.set_preference("javascript.enabled", True)
+        elif isinstance(options, ChromeOptions):
+            options.add_experimental_option("prefs", {"javascript.enabled": True})
+
         if self.browser_settings.get("headless", False):
             options.add_argument("--headless")
             options.add_argument("--disable-gpu")  # Often needed for headless
