@@ -1,7 +1,10 @@
+# Use an official Python 3.9 image as the base
 FROM python:3.9-slim
 
-# Install essential tools and system dependencies including chromium
+# Install essential tools and system dependencies
 RUN apt-get update && apt-get install -y \
+    chromium \
+    chromium-driver \
     git \
     curl \
     unzip \
@@ -19,24 +22,21 @@ RUN apt-get update && apt-get install -y \
     libgtk-3-0 \
     libasound2 \
     libgbm1 \
-    dirmngr \
-    chromium \
-    chromium-driver \
-    xvfb \
-    --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/* \
-    && apt-get clean
-
-# Create a non-root user for VS Code (best practice)
-ARG USERNAME=vscode
-ARG USER_UID=1000
-ARG USER_GID=1000
-
-RUN groupadd --gid $USER_GID $USERNAME \
-  && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+# Create a non-root user
+RUN useradd --create-home appuser
+USER appuser
 
 # Set working directory
-WORKDIR /workspace
+WORKDIR /app
 
-# Switch to non-root user
-USER $USERNAME
+# Copy requirements and install dependencies
+COPY --chown=appuser:appuser requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application
+COPY --chown=appuser:appuser . .
+
+# Command to run the application
+CMD ["python", "src/publish_queue_messages.py"]
