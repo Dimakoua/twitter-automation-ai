@@ -24,19 +24,17 @@ RUN apt-get update && apt-get install -y \
     libgbm1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-# Create a non-root user
-RUN useradd --create-home appuser
-USER appuser
+
+# Create a non-root user for VS Code (best practice)
+ARG USERNAME=vscode
+ARG USER_UID=1000
+ARG USER_GID=1000
+
+RUN groupadd --gid $USER_GID $USERNAME \
+  && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
 
 # Set working directory
-WORKDIR /app
+WORKDIR /workspace
 
-# Copy requirements and install dependencies
-COPY --chown=appuser:appuser requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy the rest of the application
-COPY --chown=appuser:appuser . .
-
-# Command to run the application
-CMD ["python", "src/publish_queue_messages.py"]
+# Switch to non-root user
+USER $USERNAME

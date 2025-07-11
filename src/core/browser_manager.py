@@ -208,7 +208,7 @@ class BrowserManager:
                 "User-Agent",
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36",
             )  # Fallback within try
-            logger.debug(f"Generated random user agent: {user_agent}")
+            logger.info(f"Generated random user agent: {user_agent}")
             return user_agent
         except Exception as e:
             logger.error(
@@ -231,8 +231,9 @@ class BrowserManager:
 
         # Use proxy from config if set explicitly
         proxy = self.browser_settings.get("proxy")
+        use_proxy_manager = self.browser_settings.get("use_proxy_manager")
         # If no proxy explicitly set, and ProxyManager instance exists, get proxy from it
-        if not proxy and self.proxy_manager:
+        if use_proxy_manager and self.proxy_manager:
             proxy = self.proxy_manager.get_proxy()
             if proxy:
                 logger.info(f"Using proxy from ProxyManager: {proxy}")
