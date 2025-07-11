@@ -3,9 +3,6 @@
 from .browser_manager import BrowserManager
 from .config_loader import ConfigLoader
 from .llm_service import LLMService
+from .proxy_manager import ProxyManager
 
-__all__ = [
-    "BrowserManager",
-    "ConfigLoader",
-    "LLMService",
-]
+__all__ = ["BrowserManager", "ConfigLoader", "LLMService", "ProxyManager"]
