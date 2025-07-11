@@ -9,5 +9,5 @@ services:
       - ./media_files:/app/media_files
       - ./queue:/app/queue
       - ./.wdm_cache:/app/.wdm_cache
-      - /tmp/twitter_queue:/tmp/twitter_queue
+      - twitter_queue_data:/tmp/twitter_queue 
     restart: unless-stopped

@@ -83,7 +83,7 @@ async def main():
         )
         return
 
-    queue = FileMessageQueue(queue_dir="/tmp/twitter_queue")
+    queue = FileMessageQueue(queue_dir="twitter_queue_data")
 
     processed_messages_count = 0
 
@@ -171,7 +171,6 @@ async def main():
         logger.info("All browser managers closed.")
     logger.info("Waiting...")
     await asyncio.sleep(1800)
-    
 
 
 if __name__ == "__main__":
