@@ -83,15 +83,15 @@
       "enable_liking_tweets": true,
       "max_likes_per_run": 5,
       "like_tweets_from_keywords": [
-            "MEMECOIN UPDATES",
-            "meme coin",
-            "altcoin pump",
-            "shitcoin",
-            "crypto signal",
-            "low cap gem",
-            "100x crypto",
-            "crypto alpha",
-            "crypto trend"
+        "MEMECOIN UPDATES",
+        "meme coin",
+        "altcoin pump",
+        "shitcoin",
+        "crypto signal",
+        "low cap gem",
+        "100x crypto",
+        "crypto alpha",
+        "crypto trend"
       ],
       "like_tweets_from_feed": true,
       "enable_thread_analysis": true,
@@ -116,6 +116,9 @@
   "logging": {
     "level": "INFO",
     "format": "%(asctime)s - %(levelname)s - %(module)s - %(message)s"
+  },
+  "file_handler": {
+    "enabled": true
   },
   "browser_settings": {
     "type": "firefox",

@@ -69,6 +69,33 @@ class TweetPublisher:
             )
             self.driver.execute_script("arguments[0].click();", element)
 
+    def _save_debug_snapshot(self, error_context: str):
+        """Saves HTML snapshot and screenshot for debugging purposes."""
+        try:
+            # 1. Save the full page HTML source
+            page_source = self.browser_manager.get_page_source()
+            if page_source:
+                # Create a /logs subdirectory in the media_files directory
+                logs_dir = os.path.join(self.media_dir, "logs")
+                os.makedirs(logs_dir, exist_ok=True)
+
+                timestamp = time.strftime("%Y%m%d-%H%M%S")
+                account_id = self.account_config.account_id or "unknown_account"
+                filename = f"debug_snapshot_{account_id}_{timestamp}.html"
+                filepath = os.path.join(logs_dir, filename)
+
+                with open(filepath, "w", encoding="utf-8") as f:
+                    f.write(page_source)
+                logger.info(f"Saved HTML snapshot for debugging to: {filepath}")
+            else:
+                logger.warning("Could not get page source for debugging.")
+
+            # 2. Save a screenshot of the current view
+            self.browser_manager.save_screenshot(name_prefix=f"error_{error_context}")
+
+        except Exception as e:
+            logger.error(f"Failed to save debug snapshot: {e}")
+
     async def _download_media(self, media_url: str) -> Optional[str]:
         """Downloads media from a URL and saves it locally."""
         if not media_url:
@@ -282,9 +309,11 @@ class TweetPublisher:
 
         except TimeoutException as e:
             logger.error(f"Timeout while trying to post tweet: {e}")
+            self._save_debug_snapshot("timeout_post_tweet")
             return False
         except Exception as e:
             logger.error(f"Failed to post tweet: {e}", exc_info=True)
+            self._save_debug_snapshot("exception_post_tweet")
             return False
 
     async def reply_to_tweet(
@@ -389,12 +418,14 @@ class TweetPublisher:
             logger.error(
                 f"Timeout while trying to reply to tweet {original_tweet.tweet_id}: {e}"
             )
+            self._save_debug_snapshot("timeout_reply_tweet")
             return False
         except Exception as e:
             logger.error(
                 f"Failed to reply to tweet {original_tweet.tweet_id}: {e}",
                 exc_info=True,
             )
+            self._save_debug_snapshot("exception_reply_tweet")
             return False
 
     async def retweet_tweet(
@@ -560,12 +591,14 @@ class TweetPublisher:
             logger.error(
                 f"Timeout during {action_type_log.lower()} for tweet {original_tweet.tweet_id}: {e}"
             )
+            self._save_debug_snapshot(f"timeout_{action_type_log.lower()}_tweet")
             return False
         except Exception as e:
             logger.error(
                 f"Failed to {action_type_log.lower()} tweet {original_tweet.tweet_id}: {e}",
                 exc_info=True,
             )
+            self._save_debug_snapshot(f"exception_{action_type_log.lower()}_tweet")
             return False
 
 

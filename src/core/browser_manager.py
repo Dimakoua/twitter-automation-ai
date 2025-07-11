@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import sys
-from math import log
+import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
@@ -417,6 +417,33 @@ class BrowserManager:
         except WebDriverException:
             logger.warning("WebDriver is not responsive.")
             return False
+
+    def get_page_source(self) -> Optional[str]:
+        """Returns the page source of the current page if the driver is active."""
+        if self.is_driver_active():
+            return self.driver.page_source
+        return None
+
+    def save_screenshot(self, name_prefix: str = "screenshot"):
+        """Saves a screenshot of the current page to the media_files/logs directory."""
+        if not self.is_driver_active():
+            logger.warning("Cannot save screenshot, driver is not active.")
+            return
+
+        # Create a /logs subdirectory in the media_files directory
+        logs_dir = Path("media_files") / "logs"
+        logs_dir.mkdir(parents=True, exist_ok=True)
+
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        account_id = self.account_config.get("account_id", "unknown_account")
+        filename = f"{name_prefix}_{account_id}_{timestamp}.png"
+        filepath = logs_dir / filename
+
+        try:
+            self.driver.save_screenshot(str(filepath))
+            logger.info(f"Screenshot saved to {filepath}")
+        except Exception as e:
+            logger.error(f"Failed to save screenshot to {filepath}: {e}")
 
     def __enter__(self):
         """Initializes driver when entering a 'with' statement."""

@@ -151,9 +151,9 @@ async def main():
             processed_messages_count += 1
         else:
             logger.error(
-                f"Failed to post message from source: {message_source} to account: {target_account_id}."
+                f"Failed to post message from source: {message_source} to account: {target_account_id}. A debug snapshot may have been saved in media_files/logs."
             )
-        
+
         await asyncio.sleep(1800)
 
     # Ensure all browser managers are closed at the end of the script's run
