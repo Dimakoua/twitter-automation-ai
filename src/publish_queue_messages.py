@@ -84,7 +84,7 @@ async def main():
     processed_messages_count = 0
 
     while True:
-        message = queue.get(block=False, poll_interval=1)
+        message, message_id = queue.get(block=False, poll_interval=1)
 
         if message is None:
             # No more messages in the queue
@@ -108,6 +108,7 @@ async def main():
             logger.warning(
                 f"Skipping malformed or irrelevant message. Type: {message_type}, Source: {message_source}, Text: {tweet_text[:50] if tweet_text else 'N/A'}"
             )
+            queue.nack(message_id)
             continue
 
         target_account_id = message_source_to_account_map.get(message_source)
@@ -116,6 +117,7 @@ async def main():
             logger.error(
                 f"No target account configured for message source '{message_source}'. Message will not be posted."
             )
+            queue.nack(message_id)
             continue
 
         publisher = await get_publisher_for_account(
@@ -125,6 +127,7 @@ async def main():
             logger.error(
                 f"Could not get publisher for account '{target_account_id}'. Skipping message from source '{message_source}'."
             )
+            queue.nack(message_id)
             continue
 
         final_tweet_content = TweetContent(text=tweet_text)
@@ -143,16 +146,19 @@ async def main():
                 f"Error during tweet posting for source '{message_source}': {e}",
                 exc_info=True,
             )
+            queue.nack(message_id)
 
         if post_success:
             logger.info(
                 f"Successfully posted message from source: {message_source} to account: {target_account_id}."
             )
             processed_messages_count += 1
+            queue.ack(message_id)
         else:
             logger.error(
                 f"Failed to post message from source: {message_source} to account: {target_account_id}. A debug snapshot may have been saved in media_files/logs."
             )
+            queue.nack(message_id)
 
         await asyncio.sleep(1800)
 

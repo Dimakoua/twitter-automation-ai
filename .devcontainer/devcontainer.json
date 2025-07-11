@@ -6,7 +6,6 @@
         "dockerfile": "Dockerfile",
         "context": ".."
     },
-
     "customizations": {
         "vscode": {
             "extensions": [
@@ -28,7 +27,7 @@
         }
     },
 
-    "postCreateCommand": "pip install --no-cache-dir -r requirements.txt",
+    "postCreateCommand": "pip install --no-cache-dir -r requirements.txt && git config --global user.name 'Dmytro Kozin' && git config --global user.email 'dimakoua@gmail.com'",
 
     "runArgs": ["--shm-size=256m"],
 
