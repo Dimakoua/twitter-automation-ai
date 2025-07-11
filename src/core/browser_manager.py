@@ -274,9 +274,6 @@ class BrowserManager:
         try:
             if browser_type == "chrome":
                 options = self._configure_driver_options(ChromeOptions())
-                options.add_argument("--disable-dev-shm-usage")
-                options.add_argument("--remote-debugging-port=9222")
-                options.add_argument("--disable-software-rasterizer")
 
                 if use_undetected:
                     # Undetected-chromedriver handles its own driver management
