@@ -1,19 +1,20 @@
+import logging
 import random
 import threading
 import time
-import logging
 from typing import List, Optional
 
 import requests
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+
 
 class ProxyManager:
     def __init__(
         self,
         test_url: str = "https://httpbin.org/ip",
-        timeout: int = 5,
+        timeout: int = 10,
         rotate_every: int = 300,
     ):
         self.test_url = test_url
@@ -25,9 +26,7 @@ class ProxyManager:
         self.load_proxies()
 
         self.rotation_thread = threading.Thread(
-            target=self._rotate_proxies_periodically,
-            daemon=True,
-            name="ProxyRotator"
+            target=self._rotate_proxies_periodically, daemon=True, name="ProxyRotator"
         )
         self.rotation_thread.start()
 
@@ -38,10 +37,11 @@ class ProxyManager:
 
         working_proxies = []
         for proxy in raw_proxies:
+            logger.info(f"Testing proxy - {proxy}")
             latency = self.is_proxy_working(proxy, self.test_url, self.timeout)
             if latency is not None:
                 working_proxies.append((proxy, latency))
-                logger.debug(f"Proxy {proxy} latency: {latency:.2f}s")
+                logger.info(f"Proxy {proxy} latency: {latency:.2f}s")
 
         working_proxies.sort(key=lambda x: x[1])  # Sort by latency
 
@@ -72,7 +72,9 @@ class ProxyManager:
                 logger.warning(f"Removed bad proxy: {proxy}")
 
     @staticmethod
-    def is_proxy_working(proxy: str, test_url: str, timeout: int = 5) -> Optional[float]:
+    def is_proxy_working(
+        proxy: str, test_url: str, timeout: int = 5
+    ) -> Optional[float]:
         try:
             start = time.time()
             response = requests.get(
@@ -89,7 +91,7 @@ class ProxyManager:
 
     @staticmethod
     def fetch_http_proxies() -> List[str]:
-        url = "https://www.proxy-list.download/api/v1/get?type=http"
+        url = "https://api.proxyscrape.com/v4/free-proxy-list/get?request=displayproxies&protocol=http&timeout=10000&country=all&ssl=all&anonymity=all&skip=0&limit=20"
         try:
             response = requests.get(url, timeout=10)
             response.raise_for_status()

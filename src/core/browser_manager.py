@@ -221,12 +221,6 @@ class BrowserManager:
         user_agent = self._get_user_agent()
         options.add_argument(f"user-agent={user_agent}")
 
-        # Explicitly enable JavaScript
-        if isinstance(options, FirefoxOptions):
-            options.set_preference("javascript.enabled", True)
-        elif isinstance(options, ChromeOptions):
-            options.add_experimental_option("prefs", {"javascript.enabled": True})
-
         if self.browser_settings.get("headless", False):
             options.add_argument("--headless")
             options.add_argument("--disable-gpu")  # Often needed for headless
@@ -286,7 +280,12 @@ class BrowserManager:
 
                 if use_undetected:
                     # Undetected-chromedriver handles its own driver management
-                    self.driver = uc.Chrome(options=options)
+                    service_args = self.browser_settings.get("chrome_service_args", [])
+                    service = ChromeService(
+                        ChromeDriverManager(path=driver_manager_install_path).install(),
+                        service_args=service_args if service_args else None,
+                    )
+                    self.driver = uc.Chrome(service=service, options=options)
                 else:
                     service_args = self.browser_settings.get("chrome_service_args", [])
                     service = ChromeService(
