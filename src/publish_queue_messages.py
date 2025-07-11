@@ -8,6 +8,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from core.browser_manager import BrowserManager  # Assuming core.browser_manager
 from core.config_loader import ConfigLoader
 from core.llm_service import LLMService  # Assuming core.llm_service
+from core.proxy_manager import ProxyManager
 from data_models import (
     AccountConfig,
     TweetContent,
@@ -50,10 +51,13 @@ async def get_publisher_for_account(
         return None
 
     account_config = AccountConfig.model_validate(found_account)
+    proxy_manager = ProxyManager()
 
     # Initialize BrowserManager if not already done for this account
     if account_id not in account_browser_managers:
-        browser_manager = BrowserManager(account_config=found_account)
+        browser_manager = BrowserManager(
+            account_config=found_account, proxy_manager=proxy_manager
+        )
         account_browser_managers[account_id] = browser_manager
     else:
         browser_manager = account_browser_managers[account_id]
