@@ -4,7 +4,6 @@ FROM python:3.9-slim
 # Install essential tools and system dependencies for Selenium and Firefox
 RUN apt-get update && apt-get install -y \
     chromium \
-    chromium-driver \
     git \
     curl \
     unzip \
@@ -20,6 +19,8 @@ RUN apt-get update && apt-get install -y \
     xdg-utils \
     libatk-bridge2.0-0 \
     libgtk-3-0 \
+    libasound2 \
+    libgbm1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 # Create a non-root user
