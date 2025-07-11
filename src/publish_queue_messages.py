@@ -164,13 +164,14 @@ async def main():
             )
             queue.nack(message_id)
 
-        await asyncio.sleep(1800)
-
-    # Ensure all browser managers are closed at the end of the script's run
-    for account_id, bm in account_browser_managers.items():
-        logger.info(f"Closing browser for account {account_id}...")
-        bm.close_driver()
-    logger.info("All browser managers closed.")
+        # Ensure all browser managers are closed at the end of the script's run
+        for account_id, bm in account_browser_managers.items():
+            logger.info(f"Closing browser for account {account_id}...")
+            bm.close_driver()
+        logger.info("All browser managers closed.")
+    logger.info("Waiting...")
+    await asyncio.sleep(1800)
+    
 
 
 if __name__ == "__main__":
