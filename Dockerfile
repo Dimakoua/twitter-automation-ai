@@ -3,6 +3,8 @@ FROM python:3.9-slim
 
 # Install essential tools and system dependencies for Selenium and Firefox
 RUN apt-get update && apt-get install -y \
+    chromium \
+    chromium-driver \
     git \
     curl \
     unzip \
