@@ -1,10 +1,7 @@
-# Use an official Python 3.9 image as the base
 FROM python:3.9-slim
 
-# Install essential tools and system dependencies
+# Install essential tools and system dependencies including chromium
 RUN apt-get update && apt-get install -y \
-    chromium \
-    chromium-driver \
     git \
     curl \
     unzip \
@@ -22,8 +19,13 @@ RUN apt-get update && apt-get install -y \
     libgtk-3-0 \
     libasound2 \
     libgbm1 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    dirmngr \
+    chromium \
+    chromium-driver \
+    xvfb \
+    --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 # Create a non-root user for VS Code (best practice)
 ARG USERNAME=vscode
