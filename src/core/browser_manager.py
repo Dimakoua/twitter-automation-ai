@@ -6,6 +6,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
+import undetected_chromedriver as uc
 from dotenv import load_dotenv
 
 # from webdriver_manager.core.utils import WDM_SSL_VERIFY # To potentially configure SSL verification
@@ -255,7 +256,13 @@ class BrowserManager:
             return self.driver
 
         browser_type = self.browser_settings.get("type", "firefox").lower()
+        use_undetected = self.browser_settings.get(
+            "use_undetected_chromedriver", False
+        )
+
         logger.info(f"Initializing {browser_type} WebDriver...")
+        if browser_type == "chrome" and use_undetected:
+            logger.info("Using undetected-chromedriver.")
 
         # Determine driver manager path
         driver_manager_install_path = str(self.wdm_cache_path)
@@ -266,13 +273,20 @@ class BrowserManager:
                 options.add_argument("--disable-dev-shm-usage")
                 options.add_argument("--remote-debugging-port=9222")
                 options.add_argument("--disable-software-rasterizer")
-                # Pass service arguments from config if available
-                service_args = self.browser_settings.get("chrome_service_args", [])
-                service = ChromeService(
-                    ChromeDriverManager(path=driver_manager_install_path).install(),
-                    service_args=service_args if service_args else None,
-                )
-                self.driver = webdriver.Chrome(service=service, options=options)
+
+                if use_undetected:
+                    # Undetected-chromedriver handles its own driver management
+                    self.driver = uc.Chrome(options=options)
+                else:
+                    service_args = self.browser_settings.get("chrome_service_args", [])
+                    service = ChromeService(
+                        ChromeDriverManager(
+                            path=driver_manager_install_path
+                        ).install(),
+                        service_args=service_args if service_args else None,
+                    )
+                    self.driver = webdriver.Chrome(service=service, options=options)
+
             elif browser_type == "firefox":
                 options = self._configure_driver_options(FirefoxOptions())
                 service_args = self.browser_settings.get("firefox_service_args", [])
