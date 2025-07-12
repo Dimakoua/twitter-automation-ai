@@ -1,7 +1,8 @@
+# Use an official Python 3.9 image as the base
 FROM python:3.9-slim
 
+# Install essential tools and system dependencies
 RUN apt-get update && apt-get install -y \
-    chromium \
     git \
     curl \
     unzip \
@@ -17,18 +18,19 @@ RUN apt-get update && apt-get install -y \
     xdg-utils \
     libatk-bridge2.0-0 \
     libgtk-3-0 \
-    libasound2 \
-    libgbm1 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Optional: Add non-root user (if you want to run as non-root)
+# Create a non-root user for VS Code (best practice)
 ARG USERNAME=vscode
 ARG USER_UID=1000
 ARG USER_GID=1000
 
 RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
+  && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME
 
-USER $USERNAME
+# Set working directory
 WORKDIR /workspace
+
+# Switch to non-root user
+USER $USERNAME

@@ -122,12 +122,10 @@
   },
   "browser_settings": {
     "type": "firefox",
-    "use_undetected_chromedriver": false,
     "headless": true,
     "user_agent_generation": "random",
     "custom_user_agent": null,
     "proxy": null,
-    "use_proxy_manager": false,
     "window_size": "1920,1080",
     "driver_options": [
       "--no-sandbox",

@@ -6,7 +6,6 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-import undetected_chromedriver as uc
 from dotenv import load_dotenv
 
 # from webdriver_manager.core.utils import WDM_SSL_VERIFY # To potentially configure SSL verification
@@ -24,8 +23,6 @@ from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.remote.webdriver import WebDriver
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
-
-from src.core.proxy_manager import ProxyManager
 
 load_dotenv()
 # Adjust import path for ConfigLoader and setup_logger
@@ -61,7 +58,6 @@ class BrowserManager:
         self,
         account_config: Optional[Dict[str, Any]] = None,
         config_loader: Optional[ConfigLoader] = None,
-        proxy_manager: Optional[ProxyManager] = None,
     ):
         """
         Initializes the BrowserManager.
@@ -74,7 +70,7 @@ class BrowserManager:
         self.driver: Optional[WebDriver] = None
         self.account_config = account_config if account_config else {}
         self.cookies_data: Optional[List[Dict[str, Any]]] = None
-        self.proxy_manager = proxy_manager
+
         # Configure WDM SSL verification from settings if provided
         # wdm_ssl_verify_config = self.browser_settings.get('webdriver_manager_ssl_verify')
         # if wdm_ssl_verify_config is not None:
@@ -208,7 +204,7 @@ class BrowserManager:
                 "User-Agent",
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36",
             )  # Fallback within try
-            logger.info(f"Generated random user agent: {user_agent}")
+            logger.debug(f"Generated random user agent: {user_agent}")
             return user_agent
         except Exception as e:
             logger.error(
@@ -229,17 +225,7 @@ class BrowserManager:
         if window_size:
             options.add_argument(f"--window-size={window_size}")
 
-        # Use proxy from config if set explicitly
-        proxy = self.browser_settings.get("proxy")
-        use_proxy_manager = self.browser_settings.get("use_proxy_manager")
-        # If no proxy explicitly set, and ProxyManager instance exists, get proxy from it
-        if use_proxy_manager and self.proxy_manager:
-            proxy = self.proxy_manager.get_proxy()
-            if proxy:
-                logger.info(f"Using proxy from ProxyManager: {proxy}")
-            else:
-                logger.warning("ProxyManager returned no proxy.")
-
+        proxy = self.browser_settings.get("proxy")  # e.g. "http://user:pass@host:port"
         if proxy:
             options.add_argument(f"--proxy-server={proxy}")
 
@@ -263,11 +249,7 @@ class BrowserManager:
             return self.driver
 
         browser_type = self.browser_settings.get("type", "firefox").lower()
-        use_undetected = self.browser_settings.get("use_undetected_chromedriver", False)
-
         logger.info(f"Initializing {browser_type} WebDriver...")
-        if browser_type == "chrome" and use_undetected:
-            logger.info("Using undetected-chromedriver.")
 
         # Determine driver manager path
         driver_manager_install_path = str(self.wdm_cache_path)
@@ -275,23 +257,16 @@ class BrowserManager:
         try:
             if browser_type == "chrome":
                 options = self._configure_driver_options(ChromeOptions())
-
-                if use_undetected:
-                    # Undetected-chromedriver handles its own driver management
-                    service_args = self.browser_settings.get("chrome_service_args", [])
-                    service = ChromeService(
-                        ChromeDriverManager(path=driver_manager_install_path).install(),
-                        service_args=service_args if service_args else None,
-                    )
-                    self.driver = uc.Chrome(service=service, options=options)
-                else:
-                    service_args = self.browser_settings.get("chrome_service_args", [])
-                    service = ChromeService(
-                        ChromeDriverManager(path=driver_manager_install_path).install(),
-                        service_args=service_args if service_args else None,
-                    )
-                    self.driver = webdriver.Chrome(service=service, options=options)
-
+                options.add_argument("--disable-dev-shm-usage")
+                options.add_argument("--remote-debugging-port=9222")
+                options.add_argument("--disable-software-rasterizer")
+                # Pass service arguments from config if available
+                service_args = self.browser_settings.get("chrome_service_args", [])
+                service = ChromeService(
+                    ChromeDriverManager(path=driver_manager_install_path).install(),
+                    service_args=service_args if service_args else None,
+                )
+                self.driver = webdriver.Chrome(service=service, options=options)
             elif browser_type == "firefox":
                 options = self._configure_driver_options(FirefoxOptions())
                 service_args = self.browser_settings.get("firefox_service_args", [])

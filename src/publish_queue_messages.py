@@ -8,7 +8,6 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from core.browser_manager import BrowserManager  # Assuming core.browser_manager
 from core.config_loader import ConfigLoader
 from core.llm_service import LLMService  # Assuming core.llm_service
-from core.proxy_manager import ProxyManager
 from data_models import (
     AccountConfig,
     TweetContent,
@@ -51,13 +50,10 @@ async def get_publisher_for_account(
         return None
 
     account_config = AccountConfig.model_validate(found_account)
-    proxy_manager = ProxyManager()
 
     # Initialize BrowserManager if not already done for this account
     if account_id not in account_browser_managers:
-        browser_manager = BrowserManager(
-            account_config=found_account, proxy_manager=proxy_manager
-        )
+        browser_manager = BrowserManager(account_config=found_account)
         account_browser_managers[account_id] = browser_manager
     else:
         browser_manager = account_browser_managers[account_id]
@@ -88,7 +84,7 @@ async def main():
     processed_messages_count = 0
 
     while True:
-        message, message_id = queue.get(block=False, poll_interval=1)
+        message = queue.get(block=False, poll_interval=1)
 
         if message is None:
             # No more messages in the queue
@@ -112,7 +108,6 @@ async def main():
             logger.warning(
                 f"Skipping malformed or irrelevant message. Type: {message_type}, Source: {message_source}, Text: {tweet_text[:50] if tweet_text else 'N/A'}"
             )
-            queue.nack(message_id)
             continue
 
         target_account_id = message_source_to_account_map.get(message_source)
@@ -121,7 +116,6 @@ async def main():
             logger.error(
                 f"No target account configured for message source '{message_source}'. Message will not be posted."
             )
-            queue.nack(message_id)
             continue
 
         publisher = await get_publisher_for_account(
@@ -131,7 +125,6 @@ async def main():
             logger.error(
                 f"Could not get publisher for account '{target_account_id}'. Skipping message from source '{message_source}'."
             )
-            queue.nack(message_id)
             continue
 
         final_tweet_content = TweetContent(text=tweet_text)
@@ -150,28 +143,24 @@ async def main():
                 f"Error during tweet posting for source '{message_source}': {e}",
                 exc_info=True,
             )
-            queue.nack(message_id)
 
         if post_success:
             logger.info(
                 f"Successfully posted message from source: {message_source} to account: {target_account_id}."
             )
             processed_messages_count += 1
-            queue.ack(message_id)
         else:
             logger.error(
                 f"Failed to post message from source: {message_source} to account: {target_account_id}. A debug snapshot may have been saved in media_files/logs."
             )
-            queue.nack(message_id)
 
-        # Ensure all browser managers are closed at the end of the script's run
-        for account_id, bm in account_browser_managers.items():
-            logger.info(f"Closing browser for account {account_id}...")
-            bm.close_driver()
-        logger.info("All browser managers closed.")
-    logger.info("Waiting...")
-    await asyncio.sleep(1800)
-    
+        await asyncio.sleep(1800)
+
+    # Ensure all browser managers are closed at the end of the script's run
+    for account_id, bm in account_browser_managers.items():
+        logger.info(f"Closing browser for account {account_id}...")
+        bm.close_driver()
+    logger.info("All browser managers closed.")
 
 
 if __name__ == "__main__":
