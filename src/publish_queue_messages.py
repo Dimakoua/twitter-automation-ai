@@ -160,8 +160,12 @@ async def main():
             )
             queue.nack(message_id)
 
-        await asyncio.sleep(1800)
-
+        await asyncio.sleep(
+            random.uniform(
+                900,
+                1800
+            )
+        )
     # Ensure all browser managers are closed at the end of the script's run
     for account_id, bm in account_browser_managers.items():
         logger.info(f"Closing browser for account {account_id}...")

@@ -200,44 +200,44 @@ class TweetPublisher:
 
             # Click the main tweet button to open composer (if not already on compose page)
             # This selector might need adjustment based on X.com's current UI
-            try:
-                main_tweet_button = WebDriverWait(self.driver, 10).until(
-                    EC.element_to_be_clickable(
-                        (By.XPATH, '//a[@data-testid="SideNav_NewTweet_Button"]')
-                    )
-                )
-                self._force_click(main_tweet_button)
-                logger.info("Clicked main tweet button to open composer.")
-                time.sleep(2)  # Wait for composer to open
-            except TimeoutException:
-                logger.warning(
-                    "Main tweet button not found or not clickable. Dumping page state for debugging."
-                )
+            # try:
+            #     main_tweet_button = WebDriverWait(self.driver, 10).until(
+            #         EC.element_to_be_clickable(
+            #             (By.XPATH, '//a[@data-testid="SideNav_NewTweet_Button"]')
+            #         )
+            #     )
+            #     self._force_click(main_tweet_button)
+            #     logger.info("Clicked main tweet button to open composer.")
+            #     time.sleep(2)  # Wait for composer to open
+            # except TimeoutException:
+            #     logger.warning(
+            #         "Main tweet button not found or not clickable. Dumping page state for debugging."
+            #     )
 
-                # To get the full page content for debugging, you can save the page source and a screenshot.
-                # 1. Save the full page HTML source
-                try:
-                    page_source = self.driver.page_source
-                    # Log a snippet or save to file, as it can be very long
-                    debug_file_path = os.path.join(
-                        self.media_dir, f"debug_page_source_{int(time.time())}.html"
-                    )
-                    with open(debug_file_path, "w", encoding="utf-8") as f:
-                        f.write(page_source)
-                    logger.info(
-                        f"Full page source for debugging saved to: {debug_file_path}"
-                    )
-                except Exception as e:
-                    logger.error(f"Could not save page source for debugging: {e}")
+            #     # To get the full page content for debugging, you can save the page source and a screenshot.
+            #     # 1. Save the full page HTML source
+            #     try:
+            #         page_source = self.driver.page_source
+            #         # Log a snippet or save to file, as it can be very long
+            #         debug_file_path = os.path.join(
+            #             self.media_dir, f"debug_page_source_{int(time.time())}.html"
+            #         )
+            #         with open(debug_file_path, "w", encoding="utf-8") as f:
+            #             f.write(page_source)
+            #         logger.info(
+            #             f"Full page source for debugging saved to: {debug_file_path}"
+            #         )
+            #     except Exception as e:
+            #         logger.error(f"Could not save page source for debugging: {e}")
 
-                # 2. Save a screenshot of the current view
-                self.browser_manager.save_screenshot("post_tweet_button_not_found")
+            #     # 2. Save a screenshot of the current view
+            #     self.browser_manager.save_screenshot("post_tweet_button_not_found")
 
-                logger.info(
-                    "Assuming composer might be open or navigating to compose URL as a fallback."
-                )
-                self.driver.get("https://x.com/compose/tweet")
-                time.sleep(3)
+            #     logger.info(
+            #         "Assuming composer might be open or navigating to compose URL as a fallback."
+            #     )
+            #     self.driver.get("https://x.com/compose/tweet")
+            #     time.sleep(3)
 
             # Find the tweet text area
             text_area = WebDriverWait(self.driver, 20).until(
@@ -247,8 +247,10 @@ class TweetPublisher:
             )
             self._force_click(text_area)
             text_area.clear()
+            time.sleep(3)
             text_area.send_keys(tweet_text)
             logger.info("Typed tweet text into textarea.")
+            self.browser_manager.save_screenshot(name_prefix=f"debug_after_typedt_weet")
 
             # Upload media if any
             if final_media_paths:
@@ -293,9 +295,11 @@ class TweetPublisher:
             # Click the "Post" button
             post_button = WebDriverWait(self.driver, 20).until(
                 EC.element_to_be_clickable(
-                    (By.XPATH, '//button[@data-testid="tweetButton"]')
+                    (By.XPATH, '//button[@data-testid="tweetButtonInline"]')
+
                 )
             )
+            self.browser_manager.save_screenshot(name_prefix=f"debug_before_post")
             self._force_click(post_button)
             logger.info("Clicked 'Post' button.")
 
