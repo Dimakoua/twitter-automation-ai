@@ -245,7 +245,7 @@ class TweetPublisher:
                     (By.XPATH, '//div[@data-testid="tweetTextarea_0"]')
                 )
             )
-            text_area.click()
+            self._force_click(text_area)
             text_area.clear()
             text_area.send_keys(tweet_text)
             logger.info("Typed tweet text into textarea.")
