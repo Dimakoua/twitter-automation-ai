@@ -26,6 +26,7 @@ USER appuser
 
 # Set working directory
 WORKDIR /app
+RUN rm -rf /app/.wdm_cache
 RUN mkdir -p /app/.wdm_cache && chown -R appuser:appuser /app/.wdm_cache
 
 # Copy requirements and install dependencies
