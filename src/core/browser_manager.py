@@ -218,7 +218,7 @@ class BrowserManager:
         options.add_argument(f"user-agent={user_agent}")
 
         if self.browser_settings.get("headless", False):
-            options.add_argument("--headless")
+            options.add_argument("--headless=new")
             options.add_argument("--disable-gpu")  # Often needed for headless
 
         window_size = self.browser_settings.get("window_size")  # e.g., "1920,1080"
