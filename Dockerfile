@@ -21,7 +21,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 # Create a non-root user
-RUN useradd --create-home appuser
+RUN useradd --create-home --uid 1001 appuser
 USER appuser
 
 # Set working directory
