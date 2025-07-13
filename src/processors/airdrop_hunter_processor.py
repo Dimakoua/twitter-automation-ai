@@ -1,7 +1,7 @@
-
 import asyncio
 import random
 
+from core.llm_service import LLMService
 from data_models import AccountConfig, ActionConfig, ScrapedTweet
 from features.analyzer import TweetAnalyzer
 from features.engagement import TweetEngagement
@@ -9,7 +9,6 @@ from features.publisher import TweetPublisher
 from features.scraper import TweetScraper
 from utils.file_handler import FileHandler
 from utils.logger import setup_logger
-from core.llm_service import LLMService
 
 # Initialize logger
 logger = setup_logger()
@@ -33,17 +32,24 @@ class AirdropHunterProcessor:
         self.llm_service = llm_service
         self.account = account
         self.file_handler = file_handler
+        self.processed_action_keys = (
+            self.file_handler.load_processed_action_keys()
+        )  # Load processed action keys
 
     async def process(self, action_config: ActionConfig, processed_action_keys: set):
         if not action_config.enable_airdrop_hunter:
-            logger.info(f"[{self.account.account_id}] Airdrop Hunter is disabled for this account.")
+            logger.info(
+                f"[{self.account.account_id}] Airdrop Hunter is disabled for this account."
+            )
             return
 
         logger.info(f"[{self.account.account_id}] Starting Airdrop Hunter process...")
 
         for keyword in action_config.airdrop_hunter_keywords:
-            logger.info(f"[{self.account.account_id}] Searching for airdrops with keyword: {keyword}")
-            
+            logger.info(
+                f"[{self.account.account_id}] Searching for airdrops with keyword: {keyword}"
+            )
+
             # Scrape tweets
             tweets = await asyncio.to_thread(
                 self.scraper.scrape_tweets_by_keyword,
@@ -54,16 +60,22 @@ class AirdropHunterProcessor:
             for tweet in tweets:
                 action_key = f"airdrop_{self.account.account_id}_{tweet.tweet_id}"
                 if action_key in processed_action_keys:
-                    logger.info(f"[{self.account.account_id}] Tweet {tweet.tweet_id} already processed for airdrop. Skipping.")
+                    logger.info(
+                        f"[{self.account.account_id}] Tweet {tweet.tweet_id} already processed for airdrop. Skipping."
+                    )
                     continue
 
                 # Analyze tweet with LLM
                 is_airdrop = await self.analyzer.is_airdrop_tweet(tweet)
                 if not is_airdrop:
-                    logger.info(f"[{self.account.account_id}] Tweet {tweet.tweet_id} is not an airdrop tweet. Skipping.")
+                    logger.info(
+                        f"[{self.account.account_id}] Tweet {tweet.tweet_id} is not an airdrop tweet. Skipping."
+                    )
                     continue
 
-                logger.info(f"[{self.account.account_id}] Found potential airdrop tweet: {tweet.tweet_url}")
+                logger.info(
+                    f"[{self.account.account_id}] Found potential airdrop tweet: {tweet.tweet_url}"
+                )
 
                 # Perform actions
                 await self._perform_airdrop_actions(tweet, action_config)
@@ -78,12 +90,28 @@ class AirdropHunterProcessor:
                     )
                 )
 
-    async def _perform_airdrop_actions(self, tweet: ScrapedTweet, action_config: ActionConfig):
+    async def _perform_airdrop_actions(
+        self, tweet: ScrapedTweet, action_config: ActionConfig
+    ):
         # 1. Like the tweet
         await self.engagement.like_tweet(tweet.tweet_id, str(tweet.tweet_url))
 
+        await asyncio.sleep(
+            random.uniform(
+                action_config.min_delay_between_actions_seconds,
+                action_config.max_delay_between_actions_seconds,
+            )
+        )
+
         # 2. Retweet
         await self.publisher.retweet_tweet(tweet)
+
+        await asyncio.sleep(
+            random.uniform(
+                action_config.min_delay_between_actions_seconds,
+                action_config.max_delay_between_actions_seconds,
+            )
+        )
 
         # 3. Comment with address
         comment = None
@@ -101,11 +129,17 @@ class AirdropHunterProcessor:
 
         if comment:
             await self.publisher.reply_to_tweet(tweet, comment)
-            logger.info(f"[{self.account.account_id}] Commented with address on tweet {tweet.tweet_id}")
+            logger.info(
+                f"[{self.account.account_id}] Commented with address on tweet {tweet.tweet_id}"
+            )
         else:
-            logger.info(f"[{self.account.account_id}] No relevant address found in config for tweet {tweet.tweet_id}")
+            logger.info(
+                f"[{self.account.account_id}] No relevant address found in config for tweet {tweet.tweet_id}"
+            )
 
         # 4. Follow the user
         if tweet.user_handle:
             await self.engagement.follow_user(tweet.user_handle)
-            logger.info(f"[{self.account.account_id}] Followed user {tweet.user_handle}")
+            logger.info(
+                f"[{self.account.account_id}] Followed user {tweet.user_handle}"
+            )

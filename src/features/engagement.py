@@ -107,30 +107,21 @@ class TweetEngagement:
                 )
                 return False
 
-            # Find the like button within the tweet card element or on the page
-            # The data-testid for the like button is usually "like"
-            like_button_xpath = (
-                './/button[@data-testid="like"]'  # Relative to tweet_card_element
-            )
+            already_liked_xpath = './/button[@data-testid="unlike"]'
 
-            like_button = WebDriverWait(tweet_card_element, 10).until(
-                EC.element_to_be_clickable((By.XPATH, like_button_xpath))
-            )
-
-            # Check if already liked (Twitter often changes the 'aria-label' or 'data-testid' for liked state)
-            # For example, aria-label might change from "Like" to "Unlike"
-            # Or data-testid might change, e.g. from "like" to "unlike"
-            aria_label = like_button.get_attribute("aria-label")
-            if aria_label and "unlike" in aria_label.lower():
-                logger.info(f"Tweet {tweet_id} is already liked.")
-                return True  # Considered success as the state is "liked"
-
-            # Alternative check if data-testid changes (less common for like button itself)
-            if like_button.get_attribute("data-testid") == "unlike":
+            try:
+                # If "unlike" button exists, it's already liked
+                tweet_card_element.find_element(By.XPATH, already_liked_xpath)
                 logger.info(
                     f"Tweet {tweet_id} is already liked (data-testid indicates unlike)."
                 )
                 return True
+            except NoSuchElementException:
+                # Otherwise, click the "like" button
+                like_button_xpath = './/button[@data-testid="like"]'
+                like_button = WebDriverWait(tweet_card_element, 10).until(
+                    EC.element_to_be_clickable((By.XPATH, like_button_xpath))
+                )
             self._force_click(like_button)
             logger.info(f"Clicked like button for tweet {tweet_id}.")
 
@@ -139,13 +130,11 @@ class TweetEngagement:
 
             # Verify if liked (e.g., check aria-label again)
             # Re-fetch the button as its state might have changed its properties
-            updated_like_button = tweet_card_element.find_element(
-                By.XPATH, like_button_xpath
-            )
-            if "unlike" in updated_like_button.get_attribute("aria-label").lower():
+            try:
+                tweet_card_element.find_element(By.XPATH, already_liked_xpath)
                 logger.info(f"Successfully liked tweet {tweet_id}.")
                 return True
-            else:
+            except NoSuchElementException:
                 logger.warning(
                     f"Failed to confirm like for tweet {tweet_id} (aria-label did not change to 'Unlike')."
                 )
@@ -170,94 +159,3 @@ class TweetEngagement:
             #     self.driver.get(original_url)
             #     time.sleep(2)
             pass  # No specific navigation back logic by default, handled by orchestrator if needed.
-
-
-# Example usage and test function remains largely the same but will now use the implemented like_tweet.
-# The placeholder warning in the test function about replacing tweet_id/url is still relevant for actual testing.
-
-if __name__ == "__main__":
-    import asyncio
-
-    async def test_engagement():
-        cfg_loader = ConfigLoader()
-        accounts_data = cfg_loader.get_accounts_config()
-
-        if not accounts_data:
-            logger.error(
-                "No accounts configured in config/accounts.json. Cannot run engagement test."
-            )
-            return
-
-        active_account_dict = next(
-            (acc for acc in accounts_data if acc.get("is_active", True)), None
-        )
-        if not active_account_dict:
-            logger.error("No active accounts found in config/accounts.json.")
-            return
-
-        try:
-            # Use Pydantic's model_validate for robust parsing
-            account = AccountConfig.model_validate(active_account_dict)
-        except Exception as e:
-            logger.error(
-                f"Error creating AccountConfig model from dict for {active_account_dict.get('account_id')}: {e}"
-            )
-            return
-
-        bm = BrowserManager(account_config=active_account_dict)
-        engagement = TweetEngagement(browser_manager=bm, account_config=account)
-
-        # --- IMPORTANT: Replace with a REAL, ACCESSIBLE tweet_id and tweet_url for testing ---
-        # This tweet should ideally NOT be liked by the test account initially.
-        test_tweet_id = "1795000000000000000"  # Replace with a real tweet ID from X.com
-        test_tweet_user = "x"  # Replace with the user handle of the tweet poster
-        test_tweet_url = f"https://x.com/{test_tweet_user}/status/{test_tweet_id}"
-        # --- End of placeholder section ---
-
-        if (
-            "1795000000000000000" == test_tweet_id
-            or "someuser" == test_tweet_user
-            or "x" == test_tweet_user
-        ):
-            logger.warning(
-                "Placeholder tweet_id/URL/user detected in engagement test. Test will likely fail or target a non-existent tweet."
-            )
-            logger.warning(
-                "Please update test_tweet_id, test_tweet_user, and test_tweet_url in src/features/engagement.py with real, accessible values."
-            )
-            bm.close_driver()
-            return
-
-        try:
-            logger.info(f"Testing engagement for account: {account.account_id}")
-            logger.info(f"Attempting to like tweet: {test_tweet_url}")
-
-            success = await engagement.like_tweet(
-                tweet_id=test_tweet_id, tweet_url=test_tweet_url
-            )
-            logger.info(f"Like tweet operation result: {success}")
-
-            if success:
-                logger.info(
-                    "Waiting a few seconds to observe the 'liked' state if checking manually..."
-                )
-                time.sleep(5)
-                # Optionally, you could try to unlike it here if an unlike method existed.
-                # For now, just confirms the like action was attempted.
-
-        except Exception as e:
-            logger.error(f"Error during engagement test: {e}", exc_info=True)
-        finally:
-            logger.info("Closing browser manager after engagement test...")
-            engagement.browser_manager.close_driver()
-            logger.info("Engagement test finished.")
-
-    # To run this test:
-    # 1. Ensure config/accounts.json has at least one active account with valid cookies.
-    # 2. Replace the placeholder test_tweet_id, test_tweet_user, and test_tweet_url above with actual values.
-    # 3. Uncomment the line below:
-    # asyncio.run(test_engagement())
-    if __name__ == "__main__":
-        logger.info(
-            "To run the engagement test, uncomment 'asyncio.run(test_engagement())' at the end of the script and ensure placeholder tweet IDs/URLs are replaced with actual, accessible ones."
-        )

@@ -14,9 +14,9 @@ from data_models import (
 )
 from features.analyzer import TweetAnalyzer
 from features.engagement import TweetEngagement
-from features.likes_and_comments import LikeAndCommentProcessor
 from features.publisher import TweetPublisher
 from features.scraper import TweetScraper
+from processors.likes import LikeProcessor
 from utils.file_handler import FileHandler
 from utils.logger import setup_logger
 
@@ -25,7 +25,7 @@ main_config_loader = ConfigLoader()
 logger = setup_logger(main_config_loader)
 
 
-class TwitterOrchestrator:
+class LikeRunner:
     def __init__(self):
         self.config_loader = main_config_loader
         self.file_handler = FileHandler(self.config_loader)
@@ -61,7 +61,6 @@ class TwitterOrchestrator:
             scraper = TweetScraper(browser_manager, account_id=account.account_id)
             publisher = TweetPublisher(browser_manager, llm_service, account)
             engagement = TweetEngagement(browser_manager, account)
-
             analyzer = TweetAnalyzer(llm_service, account_config=account)
 
             automation_settings = self.global_settings.get("twitter_automation", {})
@@ -70,7 +69,7 @@ class TwitterOrchestrator:
                 **global_action_config_dict
             )
 
-            like_and_comment_processor = LikeAndCommentProcessor(
+            like_and_comment_processor = LikeProcessor(
                 scraper,
                 publisher,
                 engagement,
@@ -134,7 +133,7 @@ class TwitterOrchestrator:
 
 
 if __name__ == "__main__":
-    orchestrator = TwitterOrchestrator()
+    orchestrator = LikeRunner()
     try:
         asyncio.run(orchestrator.run())
     except KeyboardInterrupt:

@@ -97,8 +97,9 @@ Respond with only "true" or "false".
 
         llm_settings_to_use = custom_llm_settings or LLMSettings()
 
-        prompt = f"""Analyze the following tweet text to determine if it is an airdrop announcement.
+        prompt = f"""Analyze the following tweet text to determine if it is an crypto airdrop announcement.
 Airdrop tweet typically offers cryptocurrency or NFTs for free, often in exchange for simple tasks like following, retweeting, or providing a wallet address.
+Please accept only Solana, ETH and BTC airdrop and giveaways.
 
 Tweet text:
 "{tweet.text_content}"

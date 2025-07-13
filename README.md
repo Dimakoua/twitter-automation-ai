@@ -103,6 +103,16 @@ twitter-automation-ai/
 │   │   ├── scraper.py
 │   │   ├── publisher.py
 │   │   └── engagement.py
+│   ├── processors/
+│   │   ├── airdrop_hunter_processor.py
+│   │   ├── comments.py
+│   │   ├── competitor_processor.py
+│   │   └── likes.py
+│   ├── runners/
+│   │   ├── airdrop_hunter_runner.py
+│   │   ├── comment_runner.py
+│   │   ├── like_runner.py
+│   │   └── publish_queue_messages_runner.py
 │   ├── utils/              # Utility modules (logger, file handler, etc.)
 │   │   ├── logger.py
 │   │   ├── file_handler.py
@@ -110,7 +120,6 @@ twitter-automation-ai/
 │   │   └── scroller.py
 │   ├── data_models.py      # Pydantic models for data structures
 │   ├── main.py             # Main orchestrator script
-│   ├── publish_queue_messages.py # Script to publish tweets from a file queue
 │   └── __init__.py
 ├── .env                    # Environment variables (optional, for API keys)
 ├── requirements.txt        # Python dependencies
@@ -243,7 +252,7 @@ For sensitive data like API keys, you can use a `.env` file in the project root.
 
 ## Running the Application
 
-The application has two main entry points:
+The application has three main entry points:
 
 ### 1. Main Orchestrator (`main.py`)
 
@@ -254,13 +263,13 @@ To run the main orchestrator:
 python src/main.py
 ```
 
-### 2. Queue-Based Publisher (`publish_queue_messages.py`)
+### 2. Queue-Based Publisher (`publish_queue_messages_runner.py`)
 
 This script provides a simple way to publish tweets from external sources. It watches a directory for new message files (a simple file-based queue) and posts them to the appropriate Twitter account.
 
 To run the queue publisher:
 ```bash
-python src/publish_queue_messages.py
+python src/runners/publish_queue_messages_runner.py
 ```
 
 **How the Queue Works:**
@@ -274,6 +283,22 @@ python src/publish_queue_messages.py
     }
     ```
 *   The `source` field is used to look up the target `account_id` in the `message_source_to_account_map` setting in your `config/settings.json`.
+
+### 3. Scheduler (`scheduler.py`)
+
+This script runs a scheduler that executes different runners at specified intervals. This is the most convenient way to run the bot.
+
+To run the scheduler:
+```bash
+python src/scheduler.py
+```
+
+**How the Scheduler Works:**
+*   The scheduler uses the `apscheduler` library to run jobs in the background.
+*   By default, it runs the following jobs at these intervals:
+    *   `publisher_runner`: every 5 minutes
+    *   `airdrop_hunter_runner`: every 15 minutes
+    *   `like_runner`: every 2 minutes
 
 ## Development Notes
 

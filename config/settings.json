@@ -93,8 +93,12 @@
         "crypto alpha",
         "crypto trend"
       ],
-      "like_tweets_from_feed": true,
-      "enable_thread_analysis": true,
+      "airdrop_hunter_keywords": [
+        "airdrop"
+      ],
+      "like_tweets_from_feed": false,
+      "enable_thread_analysis": false,
+      "enable_airdrop_hunter": false,
       "llm_settings_for_post": {
         "service_preference": "gemini",
         "max_tokens": 150,
