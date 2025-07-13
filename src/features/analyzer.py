@@ -87,6 +87,44 @@ Respond with only "true" or "false".
         logger.warning(f"LLM did not return a response for thread analysis of tweet {tweet.tweet_id}. Assuming not a thread.")
         return False
 
+    async def is_airdrop_tweet(self, tweet: ScrapedTweet, custom_llm_settings: Optional[LLMSettings] = None) -> bool:
+        """
+        Uses LLM to analyze tweet content and determine if it's an airdrop announcement.
+        Returns True if determined to be an airdrop, False otherwise.
+        """
+        if not tweet.text_content:
+            return False
+
+        llm_settings_to_use = custom_llm_settings or LLMSettings()
+
+        prompt = f"""Analyze the following tweet text to determine if it is an airdrop announcement.
+Airdrop tweet typically offers cryptocurrency or NFTs for free, often in exchange for simple tasks like following, retweeting, or providing a wallet address.
+
+Tweet text:
+"{tweet.text_content}"
+
+Based on this text, is this tweet an airdrop announcement?
+Respond with only "true" or "false".
+"""
+        
+        logger.debug(f"Airdrop analysis prompt for tweet {tweet.tweet_id}:\n{prompt}")
+
+        response_text = await self.llm_service.generate_text(
+            prompt=prompt,
+            service_preference=llm_settings_to_use.service_preference,
+            model_name=llm_settings_to_use.model_name_override,
+            max_tokens=10,
+            temperature=0.2
+        )
+
+        if response_text:
+            response_text = response_text.strip().lower()
+            logger.debug(f"LLM response for airdrop analysis of tweet {tweet.tweet_id}: '{response_text}'")
+            return response_text == "true"
+        
+        logger.warning(f"LLM did not return a response for airdrop analysis of tweet {tweet.tweet_id}.")
+        return False
+
 if __name__ == '__main__':
     import asyncio
     # Example Usage:

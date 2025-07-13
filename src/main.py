@@ -24,6 +24,7 @@ from features.publisher import TweetPublisher
 from features.scraper import TweetScraper
 from utils.file_handler import FileHandler
 from utils.logger import setup_logger
+from airdrop_hunter_processor import AirdropHunterProcessor
 
 # Initialize main config loader and logger
 main_config_loader = ConfigLoader()
@@ -93,6 +94,20 @@ class TwitterOrchestrator:
 
             # Initialize TweetAnalyzer
             analyzer = TweetAnalyzer(llm_service, account_config=account)
+
+            # Initialize AirdropHunterProcessor
+            airdrop_hunter_processor = AirdropHunterProcessor(
+                scraper,
+                publisher,
+                engagement,
+                analyzer,
+                llm_service,
+                account,
+                self.file_handler,
+            )
+            await airdrop_hunter_processor.process(
+                current_action_config, self.processed_action_keys
+            )
 
             # Determine LLM settings for different actions:
             # Priority: Account's general LLM override -> Action-specific LLM settings from current_action_config

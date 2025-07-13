@@ -129,6 +129,26 @@ class ActionConfig(BaseModel):  # This can be global or per-account
         )  # Default to Gemini for this task
     )
 
+    # Airdrop Hunter specific controls
+    enable_airdrop_hunter: bool = Field(
+        False, description="Enable the Airdrop Hunter module."
+    )
+    airdrop_hunter_keywords: List[str] = Field(
+        default_factory=list, description="Keywords to search for airdrop tweets."
+    )
+    max_airdrop_tweets_per_run: int = Field(
+        5, description="Max airdrop tweets to process per run."
+    )
+    solana_address: Optional[str] = Field(
+        None, description="Solana address to use for airdrops."
+    )
+    ethereum_address: Optional[str] = Field(
+        None, description="Ethereum address to use for airdrops."
+    )
+    bitcoin_address: Optional[str] = Field(
+        None, description="Bitcoin address to use for airdrops."
+    )
+
 
 class AccountConfig(BaseModel):
     account_id: str  # e.g., username or a unique ID
