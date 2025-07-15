@@ -250,7 +250,6 @@ class TweetPublisher:
             time.sleep(3)
             text_area.send_keys(tweet_text)
             logger.info("Typed tweet text into textarea.")
-            self.browser_manager.save_screenshot(name_prefix=f"debug_after_typedt_weet")
 
             # Upload media if any
             if final_media_paths:
@@ -299,7 +298,6 @@ class TweetPublisher:
 
                 )
             )
-            self.browser_manager.save_screenshot(name_prefix=f"debug_before_post")
             self._force_click(post_button)
             logger.info("Clicked 'Post' button.")
 
