@@ -1,40 +1,24 @@
-# Use an official Python 3.9 image as the base
-FROM python:3.9-slim
+FROM python:3.9-alpine3.14
 
-# Install essential tools and system dependencies for Selenium and Firefox
-RUN apt-get update && apt-get install -y \
-    git \
-    curl \
-    unzip \
-    wget \
-    gnupg \
-    build-essential \
-    libnss3 \
-    libgconf-2-4 \
-    libxss1 \
-    libappindicator3-1 \
-    fonts-liberation \
-    firefox-esr \
-    xdg-utils \
-    libatk-bridge2.0-0 \
-    libgtk-3-0 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-# Create a non-root user
-RUN useradd --create-home --uid 1001 appuser
+RUN apk update && apk add --no-cache firefox-esr
+
+ENV MOZ_HEADLESS=1 DISPLAY=:99
+
+RUN adduser -D -u 1001 appuser
 USER appuser
 
-# Set working directory
 WORKDIR /app
-RUN rm -rf /app/.wdm_cache
-RUN mkdir -p /app/.wdm_cache && chown -R appuser:appuser /app/.wdm_cache
 
-# Copy requirements and install dependencies
-COPY --chown=appuser:appuser requirements.txt .
+ENV WDM_CACHE=/app/.wdm_cache
+RUN mkdir -p $WDM_CACHE && chown -R appuser:appuser $WDM_CACHE
+
+COPY requirements.txt .
+
+# You might need to install build dependencies temporarily for some packages.
+# RUN apk add --no-cache build-base  # Uncomment if needed (and remove after pip install)
 RUN pip install --no-cache-dir -r requirements.txt
+# RUN apk del build-base # Uncomment and run in same command as pip install if added above.
 
-# Copy the rest of the application
-COPY --chown=appuser:appuser . .
+COPY . .
 
-# Command to run the application
-CMD ["python", "src/scheduler.py"]
+CMD ["python", "src/publish_queue_messages.py"]
