@@ -17,7 +17,8 @@
   "twitter_automation": {
     "message_source_to_account_map": {
       "hourly_top_signal": "meme_coin_tracker_001",
-      "daily_top_signals_summary": "meme_coin_tracker_001"
+      "daily_top_signals_summary": "meme_coin_tracker_001",
+      "community_engagement_post": "meme_coin_tracker_001"
     },
     "response_interval_seconds": 300,
     "max_tweets_per_keyword_scrape": 15,
