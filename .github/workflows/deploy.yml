@@ -12,8 +12,6 @@ jobs:
   deploy:
     name: Deploy to VPS
     runs-on: ubuntu-22.04
-    # Define the environment for secrets and variables.
-    # This should be configured in your repository settings under Settings > Environments.
     environment: "PROD"
 
     steps:
@@ -29,3 +27,21 @@ jobs:
           source: "."
           target: "~/projects/${{ vars.APP_NAME }}/"
           overwrite: true
+
+      - name: Run remote commands on VPS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            export GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            export TRACKER_001_COOKIE=${{ secrets.TRACKER_001_COOKIE }}
+
+            cd ~/projects/${{ vars.APP_NAME }}/
+
+            # If the app is running, stop it
+            docker compose -f docker-compose.yml down || true
+            
+            # Build and start the app using Docker Compose
+            docker compose -f docker-compose.yml up -d --build
