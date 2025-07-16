@@ -13,9 +13,10 @@ from data_models import (
     ActionConfig,
 )
 from features.analyzer import TweetAnalyzer
-from features.competitor_interactions import CompetitorProcessor
+from features.engagement import TweetEngagement
 from features.publisher import TweetPublisher
 from features.scraper import TweetScraper
+from processors.airdrop_hunter_processor import AirdropHunterProcessor
 from utils.file_handler import FileHandler
 from utils.logger import setup_logger
 
@@ -24,7 +25,7 @@ main_config_loader = ConfigLoader()
 logger = setup_logger(main_config_loader)
 
 
-class TwitterOrchestrator:
+class AirdropHunterunner:
     def __init__(self):
         self.config_loader = main_config_loader
         self.file_handler = FileHandler(self.config_loader)
@@ -59,18 +60,38 @@ class TwitterOrchestrator:
 
             scraper = TweetScraper(browser_manager, account_id=account.account_id)
             publisher = TweetPublisher(browser_manager, llm_service, account)
+            engagement = TweetEngagement(browser_manager, account)
             analyzer = TweetAnalyzer(llm_service, account_config=account)
 
             automation_settings = self.global_settings.get("twitter_automation", {})
             global_action_config_dict = automation_settings.get("action_config", {})
-            current_action_config = account.action_config or ActionConfig(
-                **global_action_config_dict
-            )
+            # Step 1: Base config from global settings
+            base_config_dict = global_action_config_dict.copy()
 
-            competitor_processor = CompetitorProcessor(
-                scraper, publisher, analyzer, llm_service, account, self.file_handler
+            # Step 2: Override with account config if present
+            if account.action_config:
+                base_config_dict.update(account.action_config.to_dict())
+
+            # Step 3: Override with per-account settings from accounts_data
+            account_data = next(
+                (item for item in self.accounts_data if item.get("account_id") == account.account_id),
+                {}
             )
-            await competitor_processor.process(
+            account_override = account_data.get("action_config_override", {})
+
+            # Final merged config
+            current_action_config = ActionConfig(**{**base_config_dict, **account_override})
+
+            airdrop_hunter_processor = AirdropHunterProcessor(
+                scraper,
+                publisher,
+                engagement,
+                analyzer,
+                llm_service,
+                account,
+                self.file_handler,
+            )
+            await airdrop_hunter_processor.process(
                 current_action_config, self.processed_action_keys
             )
 
@@ -125,7 +146,7 @@ class TwitterOrchestrator:
 
 
 if __name__ == "__main__":
-    orchestrator = TwitterOrchestrator()
+    orchestrator = AirdropHunterunner()
     try:
         asyncio.run(orchestrator.run())
     except KeyboardInterrupt:

@@ -7,7 +7,10 @@ services:
     volumes:
       - ./config:/app/config
       - ./media_files:/app/media_files
-      - ./queue:/app/queue
       - ./.wdm_cache:/app/.wdm_cache
-      - /tmp/twitter_queue:/tmp/twitter_queue
+      - global_twitter_queue:/app/twitter_queue:ro
     restart: unless-stopped
+
+volumes:
+ global_twitter_queue:
+   external: true
