@@ -6,7 +6,7 @@ import time
 
 
 class FileMessageQueue:
-    def __init__(self, queue_dir="/tmp/twitter_queue", visibility_timeout=300):
+    def __init__(self, queue_dir="twitter_queue", visibility_timeout=300):
         self.queue_dir = queue_dir
         self.processing_dir = os.path.join(self.queue_dir, "processing")
         self.dead_letter_dir = os.path.join(self.queue_dir, "dead_letter")

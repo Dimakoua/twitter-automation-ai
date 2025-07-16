@@ -17,28 +17,28 @@ def run_async_job(job_func):
 
 def start_scheduler():
     scheduler = BackgroundScheduler()
-    # scheduler.add_job(
-    #     lambda: run_async_job(publisher_runner),
-    #     "interval",
-    #     minutes=15,
-    #     id="publisher_job",
-    #     name="Run Publisher",
-    # )
-    airdrop_hunter_runner = AirdropHunterunner()
     scheduler.add_job(
-        lambda: run_async_job(airdrop_hunter_runner.run),
+        lambda: run_async_job(publisher_runner),
         "interval",
-        minutes=1,
-        id="airdrop_hunter_job",
-        name="Run Airdrop Hunter",
+        minutes=15,
+        id="publisher_job",
+        name="Run Publisher",
     )
-    # like_runner = LikeRunner()
+    like_runner = LikeRunner()
+    scheduler.add_job(
+        lambda: run_async_job(like_runner.run),
+        "interval",
+        minutes=45,
+        id="likes_job",
+        name="Run Likes",
+    )
+    # airdrop_hunter_runner = AirdropHunterunner()
     # scheduler.add_job(
-    #     lambda: run_async_job(like_runner.run),
+    #     lambda: run_async_job(airdrop_hunter_runner.run),
     #     "interval",
-    #     minutes=45,
-    #     id="likes_job",
-    #     name="Run Likes",
+    #     minutes=1,
+    #     id="airdrop_hunter_job",
+    #     name="Run Airdrop Hunter",
     # )
     scheduler.start()
     print("Scheduler started. Press Ctrl+C to exit.")

@@ -78,7 +78,7 @@ async def run():
         )
         return
 
-    queue = FileMessageQueue(queue_dir="/tmp/twitter_queue")
+    queue = FileMessageQueue(queue_dir="twitter_queue")
 
     processed_messages_count = 0
 
