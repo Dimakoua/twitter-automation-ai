@@ -8,7 +8,7 @@ services:
       - ./config:/app/config
       - ./media_files:/app/media_files
       - ./.wdm_cache:/app/.wdm_cache
-      - global_twitter_queue:/app/twitter_queue:ro
+      - global_twitter_queue:/app/twitter_queue
     restart: unless-stopped
 
 volumes:
