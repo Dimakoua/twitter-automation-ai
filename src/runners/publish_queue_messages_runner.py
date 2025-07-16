@@ -19,12 +19,6 @@ from utils.logger import setup_logger
 main_config_loader = ConfigLoader()
 logger = setup_logger(main_config_loader)
 
-# Cache for publishers and browser managers to avoid re-initializing for same account
-# across multiple messages in a single run
-account_publishers = {}
-account_browser_managers = {}
-
-
 async def get_publisher_for_account(
     account_id: str, config_loader: ConfigLoader, accounts_data: list
 ):
@@ -32,8 +26,6 @@ async def get_publisher_for_account(
     Retrieves or initializes a TweetPublisher for a given account ID.
     Caches publishers to reuse browser instances during a single script run.
     """
-    if account_id in account_publishers:
-        return account_publishers[account_id]
 
     found_account = None
     for account_dict in accounts_data:
@@ -49,18 +41,10 @@ async def get_publisher_for_account(
         return None
 
     account_config = AccountConfig.model_validate(found_account)
-
-    # Initialize BrowserManager if not already done for this account
-    if account_id not in account_browser_managers:
-        browser_manager = BrowserManager(account_config=found_account)
-        account_browser_managers[account_id] = browser_manager
-    else:
-        browser_manager = account_browser_managers[account_id]
-
+    browser_manager = BrowserManager(account_config=found_account)
     llm_service = LLMService(config_loader=config_loader)
-    publisher = TweetPublisher(browser_manager, llm_service, account_config)
 
-    account_publishers[account_id] = publisher
+    publisher = TweetPublisher(browser_manager, llm_service, account_config)
     return publisher
 
 
@@ -157,8 +141,6 @@ async def run():
             f"Failed to post message from source: {message_source} to account: {target_account_id}. A debug snapshot may have been saved in media_files/logs."
         )
         queue.nack(message_id)
-    # Ensure all browser managers are closed at the end of the script's run
-    for account_id, bm in account_browser_managers.items():
-        logger.info(f"Closing browser for account {account_id}...")
-        bm.close_driver()
-    logger.info("All browser managers closed.")
+
+    publisher.browser_manager.close_driver()
+    logger.info("Browser manager closed.")
