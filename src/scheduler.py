@@ -25,14 +25,14 @@ def start_scheduler():
         id="publisher_job",
         name="Run Publisher",
     )
-    like_runner = LikeRunner()
-    scheduler.add_job(
-        lambda: run_async_job(like_runner.run),
-        "interval",
-        minutes=45,
-        id="likes_job",
-        name="Run Likes",
-    )
+    # like_runner = LikeRunner()
+    # scheduler.add_job(
+    #     lambda: run_async_job(like_runner.run),
+    #     "interval",
+    #     minutes=45,
+    #     id="likes_job",
+    #     name="Run Likes",
+    # )
     # airdrop_hunter_runner = AirdropHunterunner()
     # scheduler.add_job(
     #     lambda: run_async_job(airdrop_hunter_runner.run),
