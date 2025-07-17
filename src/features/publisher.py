@@ -195,19 +195,19 @@ class TweetPublisher:
         try:
             # Navigate to Twitter home or composer, ensure logged in state
             self.driver.get("https://x.com/home")  # Or specific composer URL if available: https://x.com/compose/tweet
-
+            self._save_debug_snapshot("debug_1")
             time.sleep(random.uniform(8,18))
 
             # Optional: Check if feed is fully loaded
-            WebDriverWait(self.driver, 30).until(
-                EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, 'div[data-testid="cellInnerDiv"]')
-                )
-            )
+            # WebDriverWait(self.driver, 30).until(
+            #     EC.presence_of_element_located(
+            #         (By.CSS_SELECTOR, 'div[data-testid="cellInnerDiv"]')
+            #     )
+            # )
             
-            logger.info(
-                "Attempting to post tweet: cellInnerDiv successfully detected ."
-            )
+            # logger.info(
+            #     "Attempting to post tweet: cellInnerDiv successfully detected ."
+            # )
 
             # Click the main tweet button to open composer (if not already on compose page)
             # This selector might need adjustment based on X.com's current UI
@@ -258,6 +258,7 @@ class TweetPublisher:
             )
             self._force_click(text_area)
             text_area.clear()
+            self._save_debug_snapshot("debug_2")
 
             time.sleep(random.uniform(8,18))
 
@@ -310,8 +311,10 @@ class TweetPublisher:
                     (By.XPATH, '//button[@data-testid="tweetButtonInline"]')
                 )
             )
+            self._save_debug_snapshot("debug_3")
             self._force_click(post_button)
             logger.info("Clicked 'Post' button.")
+            self._save_debug_snapshot("debug_4")
 
             # Wait for confirmation (e.g., "Your post was sent.") or URL change, or specific element indicating success
             # This is highly dependent on X.com's UI.
