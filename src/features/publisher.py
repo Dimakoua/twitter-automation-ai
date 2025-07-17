@@ -1,5 +1,6 @@
 import mimetypes
 import os
+import random
 import sys
 import time
 from typing import Any, Dict, List, Optional
@@ -193,10 +194,20 @@ class TweetPublisher:
 
         try:
             # Navigate to Twitter home or composer, ensure logged in state
-            self.driver.get(
-                "https://x.com/home"
-            )  # Or specific composer URL if available: https://x.com/compose/tweet
-            time.sleep(3)  # Wait for page load
+            self.driver.get("https://x.com/home")  # Or specific composer URL if available: https://x.com/compose/tweet
+
+            time.sleep(random.uniform(8,18))
+
+            # Optional: Check if feed is fully loaded
+            WebDriverWait(self.driver, 30).until(
+                EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, 'div[data-testid="cellInnerDiv"]')
+                )
+            )
+            
+            logger.info(
+                "Attempting to post tweet: cellInnerDiv successfully detected ."
+            )
 
             # Click the main tweet button to open composer (if not already on compose page)
             # This selector might need adjustment based on X.com's current UI
@@ -247,7 +258,9 @@ class TweetPublisher:
             )
             self._force_click(text_area)
             text_area.clear()
-            time.sleep(3)
+
+            time.sleep(random.uniform(8,18))
+
             text_area.send_keys(tweet_text)
             logger.info("Typed tweet text into textarea.")
 
@@ -289,13 +302,12 @@ class TweetPublisher:
                 logger.info(
                     f"Sent {len(final_media_paths)} media file(s) to input: {files_to_upload_str}"
                 )
-                time.sleep(5)  # Wait for media to upload and preview
+                time.sleep(random.uniform(8,18))
 
             # Click the "Post" button
             post_button = WebDriverWait(self.driver, 20).until(
                 EC.element_to_be_clickable(
                     (By.XPATH, '//button[@data-testid="tweetButtonInline"]')
-
                 )
             )
             self._force_click(post_button)
@@ -303,7 +315,7 @@ class TweetPublisher:
 
             # Wait for confirmation (e.g., "Your post was sent.") or URL change, or specific element indicating success
             # This is highly dependent on X.com's UI.
-            time.sleep(5)  # Simple wait for now
+            time.sleep(random.uniform(8,18))
             # Add more robust success check here, e.g., looking for "Your post was sent." notification
 
             logger.info(f"Tweet posted successfully: '{tweet_text[:50]}...'")

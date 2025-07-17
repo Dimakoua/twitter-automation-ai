@@ -20,8 +20,8 @@ def start_scheduler():
     scheduler.add_job(
         lambda: run_async_job(publisher_runner),
         "interval",
-        minutes=10,
-        jitter=2340,  # 39 * 60 seconds. Runs the job randomly every 10 to 40 minutes.
+        minutes=30,
+        jitter=2340,  # 39 * 60 seconds. Runs the job randomly every 30 to 69 minutes.
         id="publisher_job",
         name="Run Publisher",
     )
