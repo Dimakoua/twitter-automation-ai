@@ -6,6 +6,7 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
+import undetected_chromedriver as uc
 from dotenv import load_dotenv
 
 # from webdriver_manager.core.utils import WDM_SSL_VERIFY # To potentially configure SSL verification
@@ -286,6 +287,14 @@ class BrowserManager:
                     service_args=service_args if service_args else None,
                 )
                 self.driver = webdriver.Firefox(service=service, options=options)
+            elif browser_type == "undetected_chrome":
+                options = uc.ChromeOptions()
+                self.driver = uc.Chrome(
+                    options=options,
+                    use_subprocess=True,
+                    headless=True,
+                    driver_executable_path="/usr/bin/chromedriver",
+                )
             else:
                 logger.error(
                     f"Unsupported browser type: {browser_type}. Cannot initialize WebDriver."
