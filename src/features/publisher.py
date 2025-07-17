@@ -194,7 +194,7 @@ class TweetPublisher:
 
         try:
             # Navigate to Twitter home or composer, ensure logged in state
-            self.driver.get("https://x.com/home")  # Or specific composer URL if available: https://x.com/compose/tweet
+            self.driver.get("https://x.com/compose/tweet")  # Or specific composer URL if available: https://x.com/compose/tweet
 
             time.sleep(random.uniform(8,18))
 
@@ -305,9 +305,14 @@ class TweetPublisher:
                 time.sleep(random.uniform(8,18))
 
             # Click the "Post" button
+            # post_button = WebDriverWait(self.driver, 20).until(
+            #     EC.element_to_be_clickable(
+            #         (By.XPATH, '//button[@data-testid="tweetButtonInline"]')
+            #     )
+            # )
             post_button = WebDriverWait(self.driver, 20).until(
                 EC.element_to_be_clickable(
-                    (By.XPATH, '//button[@data-testid="tweetButtonInline"]')
+                    (By.XPATH, '//button[@data-testid="tweetButton"]')
                 )
             )
             self._force_click(post_button)
