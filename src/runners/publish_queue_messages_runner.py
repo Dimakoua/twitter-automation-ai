@@ -7,6 +7,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from core.browser_manager import BrowserManager
 from core.config_loader import ConfigLoader
 from core.llm_service import LLMService
+from core.proxy_manager import ProxyManager
 from data_models import (
     AccountConfig,
     TweetContent,
@@ -18,6 +19,7 @@ from utils.logger import setup_logger
 # Initialize main config loader and logger
 main_config_loader = ConfigLoader()
 logger = setup_logger(main_config_loader)
+
 
 async def get_publisher_for_account(
     account_id: str, config_loader: ConfigLoader, accounts_data: list
@@ -41,7 +43,10 @@ async def get_publisher_for_account(
         return None
 
     account_config = AccountConfig.model_validate(found_account)
-    browser_manager = BrowserManager(account_config=found_account)
+    proxy_manager = ProxyManager(config_loader=config_loader)
+    browser_manager = BrowserManager(
+        account_config=found_account, proxy_manager=proxy_manager
+    )
     llm_service = LLMService(config_loader=config_loader)
 
     publisher = TweetPublisher(browser_manager, llm_service, account_config)

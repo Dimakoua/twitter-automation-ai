@@ -29,6 +29,8 @@ load_dotenv()
 try:
     from .config_loader import CONFIG_DIR as APP_CONFIG_DIR
     from .config_loader import ConfigLoader  # Import CONFIG_DIR
+    from .proxy_manager import ProxyManager
+
     # Assuming setup_logger is called once globally, so we just get a logger instance.
     # If setup_logger needs to be called here, ensure it's idempotent.
 except ImportError:
@@ -37,6 +39,7 @@ except ImportError:
     )  # Add root src to path
     from src.core.config_loader import CONFIG_DIR as APP_CONFIG_DIR
     from src.core.config_loader import ConfigLoader  # Import CONFIG_DIR
+    from src.core.proxy_manager import ProxyManager
 
 # Define project root relative to this file's location (src/core/browser_manager.py)
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -58,6 +61,7 @@ class BrowserManager:
         self,
         account_config: Optional[Dict[str, Any]] = None,
         config_loader: Optional[ConfigLoader] = None,
+        proxy_manager: Optional[ProxyManager] = None,
     ):
         """
         Initializes the BrowserManager.
@@ -67,6 +71,7 @@ class BrowserManager:
         """
         self.config_loader = config_loader if config_loader else ConfigLoader()
         self.browser_settings = self.config_loader.get_setting("browser_settings", {})
+        self.proxy_manager = proxy_manager
         self.driver: Optional[WebDriver] = None
         self.account_config = account_config if account_config else {}
         self.cookies_data: Optional[List[Dict[str, Any]]] = None
@@ -226,8 +231,14 @@ class BrowserManager:
             options.add_argument(f"--window-size={window_size}")
 
         proxy = self.browser_settings.get("proxy")  # e.g. "http://user:pass@host:port"
+        use_proxy_manager = self.browser_settings.get("use_proxy_manager")
         if proxy:
             options.add_argument(f"--proxy-server={proxy}")
+            logger.info(f"Proxy set from config manager: {proxy}")
+        elif use_proxy_manager:
+            proxy = self.proxy_manager.get_proxy()
+            options.add_argument(f"--proxy-server={proxy}")
+            logger.info(f"Proxy set by proxy manager: {proxy}")
 
         additional_options = self.browser_settings.get("driver_options", [])
         if isinstance(additional_options, list):
