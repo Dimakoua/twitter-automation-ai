@@ -130,7 +130,7 @@
         "headless": true,
         "user_agent_generation": "random",
         "custom_user_agent": null,
-        "proxy": null,
+        "proxy": "https://163.53.205.225:4153",
         "use_proxy_manager": false,
         "window_size": "1920,1080",
         "driver_options": [
