@@ -1,3 +1,4 @@
+import asyncio
 import os
 import sys
 
@@ -149,3 +150,12 @@ async def run():
 
     publisher.browser_manager.close_driver()
     logger.info("Browser manager closed.")
+
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(run())
+    except Exception as e:
+        logger.critical(f"failed with critical error: {e}", exc_info=True)
+    finally:
+        logger.info("shutdown complete.")
