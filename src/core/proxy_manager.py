@@ -102,7 +102,7 @@ class ProxyManager:
 
     @staticmethod
     def fetch_http_proxies() -> List[str]:
-        url = "https://api.proxyscrape.com/v4/free-proxy-list/get?request=displayproxies&protocol=http&timeout=10000&country=all&ssl=all&anonymity=all&skip=0&limit=30"
+        url = "https://api.proxyscrape.com/v4/free-proxy-list/get?request=displayproxies&protocol=https&timeout=10000&country=all&ssl=all&anonymity=elite&skip=0&limit=30"
         try:
             response = requests.get(url, timeout=10)
             response.raise_for_status()
