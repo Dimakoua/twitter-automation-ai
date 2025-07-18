@@ -39,6 +39,8 @@ RUN apt-get update && apt-get install -y \
     libxkbcommon0 \
     libcurl4 \
     chromium-driver \
+    firefox-esr \
+    xdg-utils \
     # Install Chromium browser instead of Google Chrome
     chromium \
     # Remove --no-install-recommends for chromium for broader compatibility,
