@@ -126,13 +126,13 @@
         "enabled": true
     },
     "browser_settings": {
-        "type": "firefox",
+        "type": "undetected_chrome",
         "headless": true,
-        "user_agent_generation": "random",
-        "custom_user_agent": null,
+        "user_agent_generation": "custom",
+        "custom_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
         "proxy": null,
         "use_proxy_manager": true,
-        "window_size": "2560,1600",
+        "window_size": "1980,1200",
         "driver_options": [
             "--no-sandbox",
             "--disable-dev-shm-usage",
