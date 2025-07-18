@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libappindicator3-1 \
     libgtk-3-0 \
     libu2f-udev \
+    firefox-esr \
+    xdg-utils \
     # Clean up apt lists to reduce image size
     && rm -rf /var/lib/apt/lists/*
 
