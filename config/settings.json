@@ -132,7 +132,7 @@
         "custom_user_agent": null,
         "proxy": null,
         "use_proxy_manager": true,
-        "window_size": "1920,1080",
+        "window_size": "2560,1600",
         "driver_options": [
             "--no-sandbox",
             "--disable-dev-shm-usage",
