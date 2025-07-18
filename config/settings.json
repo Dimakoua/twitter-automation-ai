@@ -126,7 +126,7 @@
         "enabled": true
     },
     "browser_settings": {
-        "type": "undetected_chrome",
+        "type": "firefox",
         "headless": true,
         "user_agent_generation": "random",
         "custom_user_agent": null,
